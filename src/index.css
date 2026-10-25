@@ -1,31 +1,219 @@
 @import 'tailwindcss';
 
+/*
+ * Design system (from UI UX Pro Max, "education study tracker" query):
+ * style Claymorphism — soft 3D, chunky rounded cards, double shadows, soft press.
+ * Palette: playful indigo + energetic orange CTA. Typography: Mali (Thai, rounded,
+ * playful) for headings, Sarabun (looped Thai, like school textbooks) for body.
+ * Light only: the style lists dark mode as an anti-pattern.
+ */
 @theme {
   --font-sans: 'Sarabun', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Mali', 'Sarabun', ui-sans-serif, sans-serif;
+
+  --color-primary: #4f46e5;
+  --color-primary-strong: #3730a3; /* clay "base" under primary buttons */
+  --color-on-primary: #ffffff;
+  --color-secondary: #818cf8;
+  --color-accent: #ea580c; /* the one main CTA per screen */
+  --color-accent-strong: #9a3412;
+  --color-on-accent: #000000;
+  --color-bg: #eef2ff;
+  --color-fg: #1e1b4b;
+  --color-card: #ffffff;
+  --color-muted: #ebeef8;
+  --color-muted-fg: #475569; /* 7:1 on card, 6.8:1 on bg */
+  --color-border: #c7d2fe;
+  --color-ring: #4f46e5;
+  --color-success: #047857; /* text-safe greens/reds/ambers, all >= 4.5:1 on white */
+  --color-success-bg: #d1fae5;
+  --color-danger: #b91c1c;
+  --color-danger-bg: #fee2e2;
+  --color-warning: #92400e;
+  --color-warning-bg: #fef3c7;
+
+  --radius-clay: 1.5rem;
+  --shadow-clay: 0 10px 24px -12px rgb(79 70 229 / 0.35), 0 2px 6px -2px rgb(79 70 229 / 0.12),
+    inset 0 -3px 0 rgb(79 70 229 / 0.06), inset 0 2px 0 rgb(255 255 255 / 0.9);
+  --shadow-clay-sm: 0 6px 14px -8px rgb(79 70 229 / 0.35), inset 0 -2px 0 rgb(79 70 229 / 0.06);
+
+  --ease-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 html,
 body {
-  background: #f8fafc;
-  color: #0f172a;
+  background: var(--color-bg);
+  color: var(--color-fg);
   -webkit-tap-highlight-color: transparent;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: 0;
+  line-height: 1.35;
+}
+
+button,
+a,
+[role='button'],
+input,
+select,
+textarea,
+summary,
+label {
+  touch-action: manipulation;
+}
+button:not(:disabled),
+a,
+summary,
+select,
+label:has(input[type='checkbox']) {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-ring);
+  outline-offset: 2px;
+  border-radius: 0.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 @utility card {
-  @apply rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200;
+  border-radius: var(--radius-clay);
+  background: var(--color-card);
+  padding: 1rem;
+  border: 2px solid rgb(255 255 255);
+  box-shadow: var(--shadow-clay);
 }
+
+/* Chunky button: a darker "base" shadow below; pressing sinks it (transform only, no layout shift). */
 @utility btn {
-  @apply inline-flex items-center justify-center gap-1 rounded-xl px-4 py-2 font-semibold transition active:scale-95 disabled:opacity-40;
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border-radius: 1rem;
+  padding: 0.5rem 1rem;
+  font-weight: 700;
+  transition:
+    transform 150ms var(--ease-soft),
+    box-shadow 150ms var(--ease-soft),
+    background-color 150ms var(--ease-soft),
+    opacity 150ms;
+  &:active:not(:disabled) {
+    transform: translateY(2px);
+  }
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
 }
 @utility btn-primary {
-  @apply btn bg-indigo-600 text-white;
+  @apply btn;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  box-shadow: 0 4px 0 0 var(--color-primary-strong);
+  &:active:not(:disabled) {
+    box-shadow: 0 2px 0 0 var(--color-primary-strong);
+  }
+}
+@utility btn-cta {
+  @apply btn;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  box-shadow: 0 4px 0 0 var(--color-accent-strong);
+  &:active:not(:disabled) {
+    box-shadow: 0 2px 0 0 var(--color-accent-strong);
+  }
 }
 @utility btn-ghost {
-  @apply btn bg-slate-100 text-slate-700;
+  @apply btn;
+  background: var(--color-muted);
+  color: var(--color-fg);
+  box-shadow: 0 3px 0 0 var(--color-border);
+  &:active:not(:disabled) {
+    box-shadow: 0 1px 0 0 var(--color-border);
+  }
+}
+/* Filter / choice chip with a visible selected state (not color alone: weight + check style). */
+@utility chip {
+  display: inline-flex;
+  min-height: 2.75rem;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 9999px;
+  padding: 0.25rem 0.875rem;
+  font-size: 0.875rem;
+  background: var(--color-card);
+  color: var(--color-fg);
+  border: 2px solid var(--color-border);
+  transition: background-color 150ms, color 150ms, border-color 150ms;
+  &[aria-pressed='true'] {
+    background: var(--color-fg);
+    color: #fff;
+    border-color: var(--color-fg);
+    font-weight: 700;
+  }
 }
 @utility input {
-  @apply w-full rounded-xl border border-slate-300 bg-white px-3 py-2 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200;
+  width: 100%;
+  min-height: 2.75rem;
+  border-radius: 1rem;
+  border: 2px solid var(--color-border);
+  background: var(--color-card);
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  box-shadow: inset 0 2px 4px rgb(79 70 229 / 0.06);
+  outline: none;
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgb(79 70 229 / 0.2);
+  }
 }
 @utility label {
-  @apply mb-1 block text-sm font-semibold text-slate-600;
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-muted-fg);
+}
+/* Segmented control (two-tab switch) */
+@utility segmented {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 0.25rem;
+  border-radius: 1.25rem;
+  background: var(--color-muted);
+  padding: 0.3rem;
+  box-shadow: inset 0 2px 4px rgb(79 70 229 / 0.08);
+  & > button {
+    min-height: 2.75rem;
+    border-radius: 1rem;
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: var(--color-muted-fg);
+  }
+  & > button[aria-selected='true'] {
+    background: var(--color-card);
+    color: var(--color-fg);
+    box-shadow: var(--shadow-clay-sm);
+  }
 }

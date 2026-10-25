@@ -6,12 +6,15 @@ import { todayISO } from '../logic/dates';
 import { MISTAKE_LABELS } from '../logic/stats';
 import type { AppData } from '../hooks/useAppData';
 import type { MistakeReason, ProblemState, Result } from '../types';
+import { BookOpen, CheckCheck, PencilLine } from 'lucide-react';
+import { CardTitle, ICON, PageTitle, Toast } from '../components/ui';
 
-const STATUS_RING: Record<ProblemState['status'], string> = {
-  done: 'ring-emerald-300 bg-emerald-50 text-emerald-800',
-  mastered: 'ring-emerald-300 bg-emerald-50 text-emerald-800',
-  wrong: 'ring-rose-300 bg-rose-50 text-rose-800',
-  reviewing: 'ring-amber-300 bg-amber-50 text-amber-800',
+// Already-attempted problems: tint + ring + a small glyph, so status isn't shown by color alone.
+const STATUS_LOOK: Record<ProblemState['status'], { cls: string; glyph: string; label: string }> = {
+  done: { cls: 'ring-success/50 bg-success-bg text-success', glyph: '✓', label: 'ทำแล้ว ถูก' },
+  mastered: { cls: 'ring-success/50 bg-success-bg text-success', glyph: '✓', label: 'แม่นแล้ว' },
+  wrong: { cls: 'ring-danger/50 bg-danger-bg text-danger', glyph: '✗', label: 'ผิด รอทวน' },
+  reviewing: { cls: 'ring-warning/50 bg-warning-bg text-warning', glyph: '↻', label: 'กำลังทวน' },
 };
 
 export default function Log({ data }: { data: AppData }) {
@@ -77,9 +80,9 @@ export default function Log({ data }: { data: AppData }) {
 
   return (
     <>
-      <h1 className="text-xl font-bold">✏️ บันทึกโจทย์</h1>
+      <PageTitle icon={PencilLine}>บันทึกโจทย์</PageTitle>
 
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" role="group" aria-label="เลือกวิชา">
         {data.subjects.map((s) => (
           <button
             key={s.id}
@@ -87,15 +90,18 @@ export default function Log({ data }: { data: AppData }) {
               setSubjectId(s.id!);
               setParams({});
             }}
-            className={`btn shrink-0 py-1.5 text-sm ${subjectId === s.id ? 'text-white' : 'bg-white text-slate-700 ring-1 ring-slate-200'}`}
-            style={subjectId === s.id ? { background: s.color } : undefined}
+            className="chip"
+            aria-pressed={subjectId === s.id}
           >
+            <span className="h-2.5 w-2.5 rounded-full" style={{ background: s.color }} aria-hidden />
             {s.name}
           </button>
         ))}
       </div>
 
+      <label className="sr-only" htmlFor="log-topic">หัวข้อ</label>
       <select
+        id="log-topic"
         className="input"
         value={topicId ?? ''}
         onChange={(e) => setParams(e.target.value ? { topic: e.target.value } : {})}
@@ -111,81 +117,96 @@ export default function Log({ data }: { data: AppData }) {
         })}
       </select>
 
-      {!subjectTopics.length && <p className="text-sm text-slate-500">วิชานี้ยังไม่มีหัวข้อ เพิ่มได้ที่หน้าตั้งค่า</p>}
+      {!subjectTopics.length && <p className="text-sm text-muted-fg">วิชานี้ยังไม่มีหัวข้อ เพิ่มได้ที่หน้าตั้งค่า</p>}
 
       {topic && (
         <>
-          <label className="card flex items-center gap-3">
+          <label className="card flex min-h-14 items-center gap-3">
             <input
               type="checkbox"
-              className="h-5 w-5 accent-indigo-600"
+              className="h-6 w-6 accent-[var(--color-primary)]"
               checked={topic.summaryRead}
               onChange={(e) => db.topics.update(topic.id!, { summaryRead: e.target.checked })}
             />
-            <span>📖 อ่านสรุปหัวข้อนี้แล้ว</span>
+            <BookOpen size={ICON.md} className="text-primary" aria-hidden />
+            <span className="font-semibold">อ่านสรุปหัวข้อนี้แล้ว</span>
           </label>
 
           <div className="card space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-500">
-                ทำแล้ว {tp?.done ?? 0}/{topic.problemCount} · แตะ 1 ครั้ง = ✓ · 2 ครั้ง = ✗
-              </span>
+            <div className="flex items-baseline justify-between gap-2">
+              <CardTitle>{topic.name}</CardTitle>
+              <span className="shrink-0 text-sm text-muted-fg">ทำแล้ว {tp?.done ?? 0}/{topic.problemCount}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
-              <span className="shrink-0">ถูกหมดตั้งแต่ข้อ {startAt} ถึง</span>
+            <p className="rounded-2xl bg-primary/10 p-2.5 text-sm text-fg">
+              แตะเลขข้อ <b>1 ครั้ง = ถูก ✓</b> · <b>2 ครั้ง = ผิด ✗</b> · 3 ครั้ง = ยกเลิก
+            </p>
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <label htmlFor="range-to" className="shrink-0">ถูกหมดตั้งแต่ข้อ {startAt} ถึง</label>
               <input
+                id="range-to"
                 type="number"
                 inputMode="numeric"
-                className="input w-20 py-1"
+                className="input w-20 text-center"
                 min={startAt}
                 max={topic.problemCount}
                 value={rangeTo}
                 onChange={(e) => setRangeTo(e.target.value)}
               />
-              <button className="btn-ghost py-1" onClick={markRangeCorrect} disabled={!rangeTo}>✓ ทั้งช่วง</button>
+              <button className="btn-ghost" onClick={markRangeCorrect} disabled={!rangeTo}>
+                <CheckCheck size={ICON.md} aria-hidden /> ทั้งช่วง
+              </button>
             </div>
-            <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-10">
+            <div className="grid grid-cols-6 gap-2 sm:grid-cols-10">
               {Array.from({ length: topic.problemCount }, (_, i) => i + 1).map((n) => {
                 const m = marks.get(n);
                 const st = states.get(n);
+                const look = st ? STATUS_LOOK[st.status] : null;
                 const cls = m
                   ? m.result === 'correct'
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-rose-500 text-white'
-                  : st
-                    ? `ring-2 ${STATUS_RING[st.status]}`
-                    : 'bg-slate-100 text-slate-700';
+                    ? 'bg-success text-white shadow-[0_3px_0_0_#065f46]'
+                    : 'bg-danger text-white shadow-[0_3px_0_0_#7f1d1d]'
+                  : look
+                    ? `ring-2 ring-inset ${look.cls}`
+                    : 'bg-muted text-fg shadow-[0_3px_0_0_var(--color-border)]';
+                const state = m ? (m.result === 'correct' ? 'เลือก ถูก' : 'เลือก ผิด') : look ? look.label : 'ยังไม่ทำ';
                 return (
                   <button
                     key={n}
                     onClick={() => cycle(n)}
-                    className={`aspect-square rounded-lg text-sm font-semibold transition active:scale-90 ${cls}`}
-                    aria-label={`ข้อ ${n}`}
+                    className={`relative aspect-square min-h-11 rounded-xl text-base font-bold transition-[transform,background-color] duration-100 active:scale-90 ${cls}`}
+                    aria-label={`ข้อ ${n}, ${state}`}
                   >
                     {m ? (m.result === 'correct' ? '✓' : '✗') : n}
+                    {!m && look && (
+                      <span aria-hidden className="absolute right-1 bottom-0.5 text-xs leading-none">{look.glyph}</span>
+                    )}
                   </button>
                 );
               })}
             </div>
-            <div className="flex flex-wrap gap-3 text-xs text-slate-500">
-              <span>🟩 ทำแล้วถูก</span>
-              <span>🟥 ผิด รอทวน</span>
-              <span>🟨 กำลังทวน</span>
-            </div>
+            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-fg" aria-label="ความหมายของสี">
+              {(['done', 'wrong', 'reviewing'] as const).map((k) => (
+                <li key={k} className="flex items-center gap-1.5">
+                  <span aria-hidden className={`grid h-5 w-5 place-items-center rounded-md ring-2 ring-inset text-xs ${STATUS_LOOK[k].cls}`}>{STATUS_LOOK[k].glyph}</span>
+                  {STATUS_LOOK[k].label}
+                </li>
+              ))}
+            </ul>
           </div>
 
           {wrongMarks.length > 0 && (
             <div className="card space-y-3">
-              <h2 className="font-bold">ผิดเพราะอะไร?</h2>
+              <CardTitle>ผิดเพราะอะไร?</CardTitle>
               {wrongMarks.map(([n, m]) => (
                 <div key={n}>
-                  <div className="mb-1 text-sm font-semibold">ข้อ {n}</div>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="mb-1 text-sm font-semibold" id={`why-${n}`}>ข้อ {n}</div>
+                  <div className="flex flex-wrap gap-2" role="group" aria-labelledby={`why-${n}`}>
                     {(Object.keys(MISTAKE_LABELS) as MistakeReason[]).map((r) => (
                       <button
                         key={r}
                         onClick={() => setReason(n, r)}
-                        className={`rounded-full px-3 py-1 text-sm ${m.reason === r ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-700'}`}
+                        className="chip"
+                        aria-pressed={m.reason === r}
                       >
                         {MISTAKE_LABELS[r]}
                       </button>
@@ -196,19 +217,15 @@ export default function Log({ data }: { data: AppData }) {
             </div>
           )}
 
-          <div className="sticky bottom-20 z-10">
-            <button className="btn-primary w-full py-3 shadow-lg" disabled={!marks.size} onClick={save}>
+          <div className="sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-10">
+            <button className="btn-cta w-full py-3 text-base" disabled={!marks.size} onClick={save}>
               บันทึก {marks.size || ''} ข้อ
             </button>
           </div>
         </>
       )}
 
-      {toast && (
-        <div className="fixed inset-x-4 top-4 z-20 mx-auto max-w-md rounded-xl bg-slate-900 p-3 text-center text-white shadow-lg">
-          {toast}
-        </div>
-      )}
+      {toast && <Toast>{toast}</Toast>}
     </>
   );
 }

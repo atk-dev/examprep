@@ -1,3 +1,5 @@
+import { GraduationCap, Rocket, Sparkles } from 'lucide-react';
+import { ICON } from '../components/ui';
 import { useRef, useState } from 'react';
 import { importBackup, parseBackup } from '../db/backup';
 import { db } from '../db/db';
@@ -53,9 +55,16 @@ export default function Setup({ data }: { data: AppData }) {
   return (
     <div className="mx-auto max-w-2xl space-y-4 p-4">
       <header className="pt-4 text-center">
-        <div className="text-4xl">📚</div>
-        <h1 className="mt-2 text-2xl font-bold">ตะลุยโจทย์สอบเข้า ม.1</h1>
-        <p className="text-slate-500">ตั้งค่าเริ่มต้น ขั้นที่ {step + 1} / 3</p>
+        <span className="mx-auto grid h-20 w-20 place-items-center rounded-[1.75rem] bg-primary text-on-primary shadow-[0_6px_0_0_var(--color-primary-strong)]">
+          <GraduationCap size={40} aria-hidden />
+        </span>
+        <h1 className="mt-4 text-3xl font-bold">ตะลุยโจทย์สอบเข้า ม.1</h1>
+        <p className="mt-1 text-muted-fg">ตั้งค่าเริ่มต้น ขั้นที่ {step + 1} จาก 3</p>
+        <div className="mx-auto mt-3 flex max-w-40 gap-2" aria-hidden>
+          {[0, 1, 2].map((i) => (
+            <span key={i} className={`h-2 flex-1 rounded-full ${i <= step ? 'bg-primary' : 'bg-border'}`} />
+          ))}
+        </div>
       </header>
 
       {step === 0 && (
@@ -71,8 +80,8 @@ export default function Setup({ data }: { data: AppData }) {
           <button className="btn-primary w-full" disabled={!examDate || examDate <= today} onClick={() => setStep(1)}>
             ถัดไป
           </button>
-          <div className="border-t border-slate-100 pt-3 text-center">
-            <button className="text-sm text-indigo-600 underline" onClick={() => fileRef.current?.click()}>
+          <div className="border-t border-muted pt-3 text-center">
+            <button className="min-h-11 text-sm font-semibold text-primary underline" onClick={() => fileRef.current?.click()}>
               มีไฟล์สำรองข้อมูลอยู่แล้ว? กู้คืนข้อมูล
             </button>
             <input
@@ -86,22 +95,22 @@ export default function Setup({ data }: { data: AppData }) {
                 e.target.value = '';
               }}
             />
-            {importError && <p className="mt-1 text-sm text-rose-600">{importError}</p>}
+            {importError && <p className="mt-1 text-sm text-danger">{importError}</p>}
           </div>
         </div>
       )}
 
       {step === 1 && (
         <div className="space-y-3">
-          <div className="card text-sm text-slate-600">
+          <div className="card text-sm text-muted-fg">
             ใส่หัวข้อตามหนังสือ บรรทัดละหัวข้อ: <b>ชื่อหัวข้อ, จำนวนข้อ</b>
             <br />
             ข้อในแต่ละหัวข้อนับ 1, 2, 3… ตามเลขในหนังสือ แก้ไขภายหลังได้ที่หน้าตั้งค่า
           </div>
           {emptyWithTemplate.length > 0 && (
-            <div className="card space-y-2 ring-2 ring-indigo-200">
-              <h2 className="font-bold">✨ เริ่มเร็ว: ใช้หัวข้อตัวอย่าง</h2>
-              <p className="text-sm text-slate-600">
+            <div className="card space-y-2 ring-2 ring-border">
+              <h2 className="flex items-center gap-2 text-lg font-bold"><Sparkles size={ICON.md} className="text-primary" aria-hidden /> เริ่มเร็ว: ใช้หัวข้อตัวอย่าง</h2>
+              <p className="text-sm text-muted-fg">
                 ใส่หัวข้อตามหลักสูตร ป.4–6 ให้ {emptyWithTemplate.length} วิชาที่ยังว่าง แล้วค่อยแก้ให้ตรงกับหนังสือ
               </p>
               <div className="flex items-center gap-2 text-sm">
@@ -128,12 +137,12 @@ export default function Setup({ data }: { data: AppData }) {
             const n = ts.reduce((a, t) => a + t.problemCount, 0);
             return (
               <div key={s.id} className="card">
-                <button className="flex w-full items-center justify-between" onClick={() => setOpen(open === s.id ? null : s.id!)}>
+                <button className="flex min-h-11 w-full items-center justify-between" aria-expanded={open === s.id} onClick={() => setOpen(open === s.id ? null : s.id!)}>
                   <span className="flex items-center gap-2 font-semibold">
                     <span className="h-3 w-3 rounded-full" style={{ background: s.color }} />
                     {s.name}
                   </span>
-                  <span className="text-sm text-slate-500">
+                  <span className="text-sm text-muted-fg">
                     {ts.length} หัวข้อ · {n} ข้อ {open === s.id ? '▲' : '▼'}
                   </span>
                 </button>
@@ -145,7 +154,7 @@ export default function Setup({ data }: { data: AppData }) {
               </div>
             );
           })}
-          <div className="text-center text-sm text-slate-600">
+          <div className="text-center text-sm text-muted-fg">
             รวมทั้งหมด <b>{data.topics.reduce((a, t) => a + t.problemCount, 0)}</b> ข้อ
           </div>
           <div className="flex gap-2">
@@ -165,7 +174,8 @@ export default function Setup({ data }: { data: AppData }) {
               {TH_WEEKDAYS.map((w, i) => (
                 <button
                   key={i}
-                  className={`btn py-1.5 ${rest.includes(i) ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}`}
+                  className="chip min-w-12 justify-center"
+                  aria-pressed={rest.includes(i)}
                   onClick={() => setRest(rest.includes(i) ? rest.filter((x) => x !== i) : [...rest, i])}
                 >
                   {w}
@@ -173,7 +183,7 @@ export default function Setup({ data }: { data: AppData }) {
               ))}
             </div>
           </div>
-          <div className="rounded-xl bg-indigo-50 p-3 text-sm text-indigo-900">
+          <div className="rounded-xl bg-primary/10 p-3 text-sm text-fg">
             รอบแรกมี <b>{days}</b> วันเรียน ต้องทำประมาณ{' '}
             <b>{Math.ceil(data.topics.reduce((a, t) => a + t.problemCount, 0) / Math.max(days, 1))}</b> ข้อ/วัน
             <br />
@@ -181,7 +191,7 @@ export default function Setup({ data }: { data: AppData }) {
           </div>
           <div className="flex gap-2">
             <button className="btn-ghost flex-1" onClick={() => setStep(1)}>ย้อนกลับ</button>
-            <button className="btn-primary flex-1" onClick={finish}>เริ่มเลย 🚀</button>
+            <button className="btn-cta flex-1" onClick={finish}><Rocket size={ICON.md} aria-hidden /> เริ่มเลย</button>
           </div>
         </div>
       )}

@@ -1,3 +1,5 @@
+import { Sparkles } from 'lucide-react';
+import { ICON } from './ui';
 import { useEffect, useRef, useState } from 'react';
 import { parseTopicLines } from '../db/defaults';
 import { replaceTopics } from '../db/actions';
@@ -41,9 +43,9 @@ export default function TopicEditor({ subject, topics, onSaved }: { subject: Sub
   return (
     <div className="space-y-2">
       {template && (
-        <div className="flex flex-wrap items-center gap-2 rounded-xl bg-indigo-50 p-2 text-sm text-indigo-900">
-          <button className="btn-ghost bg-white py-1 text-sm" onClick={useTemplate}>
-            ✨ ใส่หัวข้อตัวอย่าง ({template.length} หัวข้อ)
+        <div className="flex flex-wrap items-center gap-2 rounded-xl bg-primary/10 p-2 text-sm text-fg">
+          <button className="btn-ghost bg-card text-sm" onClick={useTemplate}>
+            <Sparkles size={ICON.sm} aria-hidden /> ใส่หัวข้อตัวอย่าง ({template.length} หัวข้อ)
           </button>
           <label className="flex items-center gap-1">
             ข้อละ
@@ -52,7 +54,7 @@ export default function TopicEditor({ subject, topics, onSaved }: { subject: Sub
               inputMode="numeric"
               min={1}
               max={MAX_TEMPLATE_COUNT}
-              className="input w-16 px-2 py-1 text-center"
+              className="input w-20 px-2 text-center"
               value={count}
               onChange={(e) => setCount(e.target.value)}
               aria-label="จำนวนข้อต่อหัวข้อ"
@@ -62,7 +64,8 @@ export default function TopicEditor({ subject, topics, onSaved }: { subject: Sub
         </div>
       )}
       <textarea
-        className="input min-h-36 font-mono text-sm"
+        aria-label={`หัวข้อวิชา${subject.name}`}
+        className="input min-h-40 font-mono text-sm leading-relaxed"
         placeholder={'ตัวอย่าง\nเศษส่วน, 40\nทศนิยม, 30\nร้อยละ, 25'}
         value={text}
         onChange={(e) => {
@@ -70,13 +73,13 @@ export default function TopicEditor({ subject, topics, onSaved }: { subject: Sub
           setSaved(false);
         }}
       />
-      {template && <p className="text-xs text-slate-400">หัวข้อตัวอย่างอิงหลักสูตร ป.4–6 แก้ชื่อ จำนวนข้อ หรือลบบรรทัดให้ตรงกับหนังสือได้ก่อนกดบันทึก</p>}
+      {template && <p className="text-xs text-muted-fg">หัวข้อตัวอย่างอิงหลักสูตร ป.4–6 แก้ชื่อ จำนวนข้อ หรือลบบรรทัดให้ตรงกับหนังสือได้ก่อนกดบันทึก</p>}
       <div className="flex items-center justify-between gap-2 text-sm">
-        <span className="text-slate-500">
+        <span className="text-muted-fg">
           {parsed.length} หัวข้อ · {total} ข้อ
-          {badLines > 0 && <span className="text-rose-600"> · {badLines} บรรทัดอ่านไม่ได้</span>}
+          {badLines > 0 && <span className="text-danger"> · {badLines} บรรทัดอ่านไม่ได้</span>}
         </span>
-        <button className="btn-primary py-1.5" onClick={save} disabled={text === initial || parsed.length === 0}>
+        <button className="btn-primary" onClick={save} disabled={text === initial || parsed.length === 0}>
           {saved ? 'บันทึกแล้ว ✓' : 'บันทึกหัวข้อ'}
         </button>
       </div>

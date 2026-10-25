@@ -4,6 +4,7 @@ import { saveSettings } from '../db/actions';
 import { exportBackup, importBackup, parseBackup } from '../db/backup';
 import { TH_WEEKDAYS, todayISO } from '../logic/dates';
 import { defaultPhases } from '../logic/plan';
+import { reminderICS } from '../logic/reminders';
 import TopicEditor from '../components/TopicEditor';
 import type { AppData } from '../hooks/useAppData';
 import type { Settings } from '../types';
@@ -13,7 +14,9 @@ export default function SettingsPage({ data }: { data: AppData }) {
   const [msg, setMsg] = useState('');
   const [open, setOpen] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const dirty = JSON.stringify(s) !== JSON.stringify(data.settings);
+  // lastBackupAt changes on export; it isn't something the form edits
+  const strip = (x: Settings) => ({ ...x, lastBackupAt: undefined, mockMinutesPerProblem: undefined });
+  const dirty = JSON.stringify(strip(s)) !== JSON.stringify(strip(data.settings!));
   const pinValid = s.parentPin.length === 0 || s.parentPin.length === 4;
   const phasesValid = s.startDate <= s.phase1End && s.phase1End < s.phase2End && s.phase2End < s.phase3End && s.phase3End < s.examDate;
 
@@ -22,14 +25,26 @@ export default function SettingsPage({ data }: { data: AppData }) {
     setTimeout(() => setMsg(''), 3000);
   };
 
-  async function doExport() {
-    const b = await exportBackup(db);
-    const blob = new Blob([JSON.stringify(b)], { type: 'application/json' });
+  function download(blob: Blob, name: string) {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `examprep-backup-${todayISO()}.json`;
+    a.download = name;
     a.click();
-    URL.revokeObjectURL(a.href);
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  async function doExport() {
+    const b = await exportBackup(db);
+    download(new Blob([JSON.stringify(b)], { type: 'application/json' }), `examprep-backup-${todayISO()}.json`);
+    await db.settings.update('main', { lastBackupAt: Date.now() });
+  }
+
+  async function doReminder() {
+    const reminderTime = s.reminderTime ?? '19:00';
+    const settings = { ...data.settings!, reminderTime };
+    const appUrl = location.href.split('#')[0];
+    download(new Blob([reminderICS(settings, todayISO(), appUrl)], { type: 'text/calendar' }), 'examprep-reminder.ics');
+    await db.settings.update('main', { reminderTime });
   }
 
   async function doImport(file: File) {
@@ -110,7 +125,7 @@ export default function SettingsPage({ data }: { data: AppData }) {
           className="btn-primary w-full"
           disabled={!dirty || !phasesValid || !pinValid}
           onClick={async () => {
-            await saveSettings(db, s);
+            await saveSettings(db, { ...s, lastBackupAt: data.settings!.lastBackupAt, mockMinutesPerProblem: data.settings!.mockMinutesPerProblem });
             flash('บันทึกการตั้งค่าแล้ว ✓');
           }}
         >
@@ -142,8 +157,32 @@ export default function SettingsPage({ data }: { data: AppData }) {
       </section>
 
       <section className="card space-y-2">
+        <h2 className="font-bold">แจ้งเตือน</h2>
+        <p className="text-sm text-slate-500">
+          เพิ่มนัด "ตะลุยโจทย์" ทุกวัน (ยกเว้นวันพัก) จนถึงวันสอบลงในปฏิทินของโทรศัพท์ ปฏิทินจะเตือนให้แม้ไม่ได้เปิดแอป
+        </p>
+        <div className="flex items-end gap-2">
+          <div className="flex-1">
+            <label className="label" htmlFor="set-reminder">เวลาเตือน</label>
+            <input
+              id="set-reminder"
+              type="time"
+              className="input"
+              value={s.reminderTime ?? '19:00'}
+              onChange={(e) => setS({ ...s, reminderTime: e.target.value })}
+            />
+          </div>
+          <button className="btn-primary" onClick={doReminder}>📅 เพิ่มลงปฏิทิน</button>
+        </div>
+        <p className="text-xs text-slate-400">ถ้าเปลี่ยนเวลา ให้ลบนัดเดิมในปฏิทินก่อนเพิ่มใหม่</p>
+      </section>
+
+      <section className="card space-y-2">
         <h2 className="font-bold">สำรองข้อมูล</h2>
         <p className="text-sm text-slate-500">ข้อมูลเก็บในเบราว์เซอร์เครื่องนี้เท่านั้น ควรสำรองทุกสัปดาห์ หรือใช้ย้ายไปเครื่องอื่น</p>
+        <p className="text-xs text-slate-400">
+          สำรองล่าสุด: {data.settings!.lastBackupAt ? new Date(data.settings!.lastBackupAt).toLocaleString('th-TH') : 'ยังไม่เคย'}
+        </p>
         <div className="flex gap-2">
           <button className="btn-primary flex-1" onClick={doExport}>⬇️ ส่งออก</button>
           <button className="btn-ghost flex-1" onClick={() => fileRef.current?.click()}>⬆️ นำเข้า</button>

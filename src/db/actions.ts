@@ -1,5 +1,5 @@
 import type { ExamDB } from './db';
-import type { ISODate, MistakeReason, Result, Settings, Topic } from '../types';
+import type { ISODate, MistakeReason, MockItem, MockResult, Result, Settings, Topic } from '../types';
 import { applyAttempt, problemKey, rebuildStates } from '../logic/review';
 import { DEFAULT_SUBJECTS } from './defaults';
 
@@ -84,4 +84,24 @@ export async function saveNote(db: ExamDB, topicId: number, problemNo: number, t
   const key = problemKey(topicId, problemNo);
   if (text.trim()) await db.problemNotes.put({ key, topicId, text: text.trim(), updatedAt: Date.now() });
   else await db.problemNotes.delete(key);
+}
+
+export async function startMock(db: ExamDB, items: MockItem[], limitSec: number, date: ISODate) {
+  return db.mockSets.add({ date, status: 'active', startedAt: Date.now(), limitSec, items });
+}
+
+/** Stop the clock (finished early or time ran out). Grading happens after. */
+export async function stopMock(db: ExamDB, id: number, at = Date.now()) {
+  await db.transaction('rw', db.mockSets, async () => {
+    const m = await db.mockSets.get(id);
+    if (m && !m.stoppedAt) await db.mockSets.update(id, { stoppedAt: Math.min(at, m.startedAt + m.limitSec * 1000) });
+  });
+}
+
+/** Save grading: results go on the set, and each answer is logged like normal practice. */
+export async function finishMock(db: ExamDB, id: number, results: MockResult[], date: ISODate) {
+  const m = await db.mockSets.get(id);
+  if (!m) return;
+  await saveMarks(db, m.items.map((it, i) => ({ topicId: it.topicId, problemNo: it.problemNo, ...results[i] })), date, false);
+  await db.mockSets.update(id, { status: 'done', results, stoppedAt: m.stoppedAt ?? Date.now() });
 }

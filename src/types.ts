@@ -14,6 +14,12 @@ export interface Settings {
   restWeekdays: number[];
   parentPin: string;
   setupDone: boolean;
+  /** Minutes per problem in timed sets. */
+  mockMinutesPerProblem?: number;
+  /** Daily reminder time, HH:mm. */
+  reminderTime?: string;
+  /** Last time a backup was exported (ms). */
+  lastBackupAt?: number;
 }
 
 export interface Subject {
@@ -81,4 +87,28 @@ export interface ProblemNote {
   topicId: number;
   text: string;
   updatedAt: number;
+}
+
+export interface MockItem {
+  subjectId: number;
+  topicId: number;
+  problemNo: number;
+}
+
+export interface MockResult {
+  result: Result;
+  reason?: MistakeReason;
+}
+
+/** A timed mixed-subject practice set. */
+export interface MockSet {
+  id?: number;
+  date: ISODate;
+  status: 'active' | 'done';
+  startedAt: number;
+  limitSec: number;
+  /** When the student stopped the clock (finished or time ran out). */
+  stoppedAt?: number;
+  items: MockItem[];
+  results?: MockResult[];
 }

@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
 import { ExamDB } from './db';
-import { replaceTopics, saveMarks, saveNote, seedIfEmpty } from './actions';
+import { finishMock, replaceTopics, saveMarks, saveNote, seedIfEmpty, startMock, stopMock } from './actions';
 import { exportBackup, importBackup, parseBackup } from './backup';
 import { defaultSettings, parseTopicLines } from './defaults';
 
@@ -60,5 +60,23 @@ describe('db', () => {
   it('rejects bad backups', () => {
     expect(() => parseBackup('nope')).toThrow();
     expect(() => parseBackup('{"app":"other"}')).toThrow();
+  });
+});
+
+describe('mock sets in db', () => {
+  it('start, stop, finish logs attempts and survives backup', async () => {
+    const db = new ExamDB('t4');
+    const items = [{ subjectId: 1, topicId: 5, problemNo: 1 }, { subjectId: 1, topicId: 5, problemNo: 2 }];
+    const id = await startMock(db, items, 60, '2026-10-25');
+    const started = (await db.mockSets.get(id))!.startedAt;
+    await stopMock(db, id, started + 10 * 60_000); // way past the limit
+    expect((await db.mockSets.get(id))!.stoppedAt).toBe(started + 60_000);
+    await finishMock(db, id, [{ result: 'correct' }, { result: 'wrong', reason: 'time' }], '2026-10-25');
+    expect((await db.mockSets.get(id))!.status).toBe('done');
+    expect(await db.attempts.count()).toBe(2);
+    expect((await db.problemStates.get('5:2'))?.lastReason).toBe('time');
+    const db2 = new ExamDB('t5');
+    await importBackup(db2, parseBackup(JSON.stringify(await exportBackup(db))));
+    expect(await db2.mockSets.count()).toBe(1);
   });
 });

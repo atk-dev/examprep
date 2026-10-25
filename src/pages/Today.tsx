@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
 import { db } from '../db/db';
 import { formatThai, todayISO } from '../logic/dates';
-import { planGap } from '../logic/insights';
+import { planGap, weakTopics } from '../logic/insights';
+import { backupDue } from '../logic/reminders';
+import { pct } from '../components/ui';
 import { currentPhase, dailyQuota, daysUntilExam, isRestDay } from '../logic/plan';
 import { dueReviews } from '../logic/review';
 import { streak } from '../logic/stats';
@@ -25,6 +27,11 @@ export default function Today({ data }: { data: AppData }) {
   const gap = planGap(s, today, data.states, data.total);
   const days = streak(data.attempts, today);
   const minutes = data.dailyLogs.find((l) => l.date === today)?.minutes ?? 0;
+
+  const weak = weakTopics(data.progress, 5, 3);
+  const mockToday = data.mockSets.some((m) => m.status === 'done' && m.date === today);
+  const mockActive = data.mockSets.some((m) => m.status === 'active');
+  const showBackup = backupDue(s, data.attempts.length > 0);
 
   const addMinutes = (n: number) => db.dailyLogs.put({ date: today, minutes: Math.max(0, minutes + n) });
 
@@ -52,6 +59,67 @@ export default function Today({ data }: { data: AppData }) {
           </span>
         </div>
       </section>
+
+      {showBackup && (
+        <Link to="/settings" className="flex items-center gap-3 rounded-2xl bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-amber-200">
+          <span className="text-xl">💾</span>
+          <span className="flex-1">ข้อมูลอยู่ในเครื่องนี้เท่านั้น สำรองข้อมูลไว้กันหาย (ไม่ได้สำรองมาเกิน 7 วัน)</span>
+          <span>›</span>
+        </Link>
+      )}
+
+      {mockActive && (
+        <Link to="/mock" className="flex items-center gap-3 rounded-2xl bg-indigo-50 p-3 text-sm text-indigo-900 ring-1 ring-indigo-200">
+          <span className="text-xl">⏱️</span>
+          <span className="flex-1">มีชุดจับเวลาที่ยังไม่เสร็จ</span>
+          <span>›</span>
+        </Link>
+      )}
+
+      {phase?.id === 'phase2' && (
+        <section className="card space-y-2 ring-2 ring-indigo-200">
+          <h2 className="font-bold">🎯 เป้าหมายช่วงนี้: ปิดจุดอ่อน</h2>
+          <p className="text-sm text-slate-600">ทวนข้อที่ถึงกำหนดทุกวัน แล้วทำข้อที่ยังไม่แม่นในสมุดข้อผิด เริ่มจากหัวข้อเหล่านี้</p>
+          {weak.length ? (
+            <ul className="text-sm">
+              {weak.map((w) => (
+                <li key={w.t.topic.id}>
+                  <Link to={`/review?tab=notebook&subject=${w.subject.id}`} className="flex justify-between py-1">
+                    <span>• {w.subject.name} – {w.t.topic.name}</span>
+                    <b>{pct(w.t.accuracy)}</b>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-emerald-700">ไม่มีหัวข้อที่ต่ำกว่า 80% เยี่ยมมาก! ลองฝึกจับเวลาได้เลย</p>
+          )}
+          <Link to="/review?tab=notebook" className="btn-primary w-full">เปิดสมุดข้อผิด</Link>
+        </section>
+      )}
+
+      {phase?.id === 'phase3' && (
+        <section className="card space-y-2 ring-2 ring-indigo-200">
+          <h2 className="font-bold">⏱️ เป้าหมายช่วงนี้: ฝึกจับเวลาวันละ 1 ชุด</h2>
+          <p className="text-sm text-slate-600">ทำคละวิชาให้ชินกับเวลาจริง แล้วทวนข้อที่ผิดจากชุดนั้นวันถัดไป</p>
+          {mockToday ? (
+            <p className="text-sm text-emerald-700">วันนี้ทำแล้ว ✓</p>
+          ) : (
+            <Link to="/mock" className="btn-primary w-full">เริ่มชุดวันนี้</Link>
+          )}
+        </section>
+      )}
+
+      {phase?.id === 'final' && (
+        <section className="card space-y-1 ring-2 ring-emerald-200">
+          <h2 className="font-bold">🌙 สัปดาห์สุดท้าย</h2>
+          <ul className="list-disc pl-5 text-sm text-slate-600">
+            <li>ทวนโน้ตในสมุดข้อผิด ไม่ต้องเริ่มเรื่องใหม่</li>
+            <li>นอนให้ครบ 8–9 ชั่วโมง ตื่นเวลาเดียวกับวันสอบ</li>
+            <li>เตรียมบัตร เครื่องเขียน และดูเส้นทางไปสนามสอบ</li>
+          </ul>
+        </section>
+      )}
 
       <section className="card flex items-center gap-4">
         <Ring value={quota ? doneTodayNew / quota : 1}>
@@ -110,8 +178,18 @@ export default function Today({ data }: { data: AppData }) {
         {due.length > 0 && <Link to="/review" className="btn-primary">เริ่มทวน</Link>}
       </section>
 
+      {phase?.id !== 'phase3' && !mockActive && (
+        <section className="card flex items-center justify-between">
+          <div>
+            <h2 className="font-bold">⏱️ ฝึกจับเวลา</h2>
+            <p className="text-sm text-slate-500">ชุดโจทย์คละวิชา{mockToday ? ' · วันนี้ทำแล้ว ✓' : ''}</p>
+          </div>
+          <Link to="/mock" className="btn-ghost">เปิด</Link>
+        </section>
+      )}
+
       <section className="card">
-        <h2 className="font-bold">⏱️ เวลาเรียนวันนี้</h2>
+        <h2 className="font-bold">🕒 เวลาเรียนวันนี้</h2>
         <div className="mt-2 flex items-center gap-2">
           <button className="btn-ghost" onClick={() => addMinutes(-15)} disabled={minutes === 0}>−15</button>
           <div className="flex-1 text-center text-2xl font-bold">{minutes} <span className="text-sm font-normal text-slate-500">นาที</span></div>

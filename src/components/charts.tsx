@@ -202,3 +202,51 @@ export function WeekColumns({ days }: { days: { date: ISODate; total: number }[]
     </div>
   );
 }
+
+/** Score % per timed set, oldest to newest. Single series, so no legend; tap a dot for details. */
+export function ScoreTrend({ points }: { points: { label: string; value: number; sub: string }[] }) {
+  const [ref, width] = useWidth<HTMLDivElement>();
+  const [hover, setHover] = useState<number | null>(null);
+  const h = 150;
+  const m = { top: 14, right: 36, bottom: 20, left: 34 };
+  const iw = width - m.left - m.right;
+  const ih = h - m.top - m.bottom;
+  const x = (i: number) => m.left + (points.length === 1 ? iw / 2 : (i / (points.length - 1)) * iw);
+  const y = (v: number) => m.top + ih - v * ih;
+  const path = points.map((p, i) => `${i ? 'L' : 'M'}${x(i)},${y(p.value)}`).join('');
+  const last = points.length - 1;
+  const hp = hover !== null ? points[hover] : null;
+  return (
+    <div ref={ref} className="relative">
+      <svg width={width} height={h}>
+        {[0, 0.5, 1].map((v) => (
+          <g key={v}>
+            <line x1={m.left} x2={m.left + iw} y1={y(v)} y2={y(v)} stroke={INK.grid} />
+            <text x={m.left - 6} y={y(v)} dy="0.32em" textAnchor="end" fontSize={11} fill={INK.muted}>{v * 100}%</text>
+          </g>
+        ))}
+        <path d={path} fill="none" stroke={ACTUAL} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+        {points.map((p, i) => (
+          <g key={i} onPointerEnter={() => setHover(i)} onPointerDown={() => setHover(i)} onPointerLeave={() => setHover(null)} className="cursor-pointer">
+            <circle cx={x(i)} cy={y(p.value)} r={12} fill="transparent" />
+            <circle cx={x(i)} cy={y(p.value)} r={6} fill={INK.surface} />
+            <circle cx={x(i)} cy={y(p.value)} r={4} fill={ACTUAL} />
+          </g>
+        ))}
+        {last >= 0 && (
+          <text x={x(last) + 9} y={y(points[last].value)} dy="0.32em" fontSize={12} fontWeight={700} fill={INK.primary}>
+            {Math.round(points[last].value * 100)}%
+          </text>
+        )}
+        <text x={m.left} y={h - 4} fontSize={11} fill={INK.muted}>{points[0]?.label}</text>
+        {last > 0 && <text x={m.left + iw} y={h - 4} textAnchor="end" fontSize={11} fill={INK.muted}>{points[last].label}</text>}
+      </svg>
+      {hp && (
+        <div className="pointer-events-none absolute top-0 z-10 rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs text-white shadow" style={{ left: Math.min(Math.max(x(hover!) - 60, 0), width - 130) }}>
+          <div className="font-semibold">{hp.label}</div>
+          <div>{Math.round(hp.value * 100)}% · {hp.sub}</div>
+        </div>
+      )}
+    </div>
+  );
+}

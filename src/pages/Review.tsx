@@ -1,5 +1,7 @@
 import { useSearchParams } from 'react-router-dom';
 import ProblemCard from '../components/ProblemCard';
+import { PageTitle, Segmented } from '../components/ui';
+import { RotateCcw } from 'lucide-react';
 import { todayISO } from '../logic/dates';
 import { dueReviews } from '../logic/review';
 import { MISTAKE_LABELS } from '../logic/stats';
@@ -15,11 +17,8 @@ const STATUS_FILTERS: { id: StatusFilter; label: string }[] = [
 
 function Chip({ on, onClick, children, color }: { on: boolean; onClick: () => void; children: React.ReactNode; color?: string }) {
   return (
-    <button
-      onClick={onClick}
-      className={`shrink-0 rounded-full px-3 py-1 text-sm ${on ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 ring-1 ring-slate-200'}`}
-    >
-      {color && <span className="mr-1.5 inline-block h-2 w-2 rounded-full" style={{ background: color }} />}
+    <button onClick={onClick} className="chip" aria-pressed={on}>
+      {color && <span className="h-2.5 w-2.5 rounded-full" style={{ background: color }} aria-hidden />}
       {children}
     </button>
   );
@@ -65,26 +64,24 @@ export default function Review({ data }: { data: AppData }) {
 
   return (
     <>
-      <h1 className="text-xl font-bold">🔁 ทวนข้อผิด</h1>
-      <div className="grid grid-cols-2 rounded-xl bg-slate-200 p-1 text-sm">
-        {(['due', 'notebook'] as const).map((t) => (
-          <button
-            key={t}
-            className={`rounded-lg py-1.5 font-semibold ${tab === t ? 'bg-white shadow-sm' : 'text-slate-600'}`}
-            onClick={() => setParams(t === 'notebook' ? { tab: 'notebook' } : {}, { replace: true })}
-          >
-            {t === 'due' ? `ถึงกำหนด (${due.length})` : `สมุดข้อผิด (${everWrong.length})`}
-          </button>
-        ))}
-      </div>
+      <PageTitle icon={RotateCcw}>ทวนข้อผิด</PageTitle>
+      <Segmented
+        label="มุมมอง"
+        value={tab}
+        onChange={(t) => setParams(t === 'notebook' ? { tab: 'notebook' } : {}, { replace: true })}
+        options={[
+          { id: 'due', label: `ถึงกำหนด (${due.length})` },
+          { id: 'notebook', label: `สมุดข้อผิด (${everWrong.length})` },
+        ]}
+      />
 
       {tab === 'due' && (
         <>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-muted-fg">
             ทำข้อเดิมใหม่โดยไม่ดูเฉลย ถ้าถูกจะเว้นไป 3 วัน แล้ว 7 วัน ถูก 3 รอบติดถือว่าแม่นแล้ว
           </p>
           {due.length === 0 && (
-            <div className="card text-center text-slate-500">
+            <div className="card text-center text-muted-fg">
               ไม่มีข้อที่ต้องทวนวันนี้ 🎉
               {upcoming > 0 && <div className="text-sm">มีอีก {upcoming} ข้อรอทวนวันหลัง</div>}
             </div>
@@ -95,7 +92,7 @@ export default function Review({ data }: { data: AppData }) {
 
       {tab === 'notebook' && (
         <>
-          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" role="group" aria-label="กรองตามวิชา">
             <Chip on={!subjectF} onClick={() => set('subject', null)}>ทุกวิชา</Chip>
             {data.subjects.map((s) => (
               <Chip key={s.id} on={subjectF === s.id} color={s.color} onClick={() => set('subject', String(s.id))}>
@@ -103,19 +100,19 @@ export default function Review({ data }: { data: AppData }) {
               </Chip>
             ))}
           </div>
-          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" role="group" aria-label="กรองตามสาเหตุ">
             <Chip on={!reasonF} onClick={() => set('reason', null)}>ทุกสาเหตุ</Chip>
             {(Object.keys(MISTAKE_LABELS) as MistakeReason[]).map((r) => (
               <Chip key={r} on={reasonF === r} onClick={() => set('reason', r)}>{MISTAKE_LABELS[r]}</Chip>
             ))}
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2" role="group" aria-label="กรองตามสถานะ">
             {STATUS_FILTERS.map((f) => (
               <Chip key={f.id} on={statusF === f.id} onClick={() => set('status', f.id === 'open' ? null : f.id)}>{f.label}</Chip>
             ))}
           </div>
-          <p className="text-sm text-slate-500">{notebook.length} ข้อ · เรียงจากข้อที่ผิดบ่อยที่สุด · ทำใหม่ได้ทุกเมื่อ</p>
-          {notebook.length === 0 && <div className="card text-center text-slate-500">ไม่มีข้อในหมวดนี้</div>}
+          <p className="text-sm text-muted-fg">{notebook.length} ข้อ · เรียงจากข้อที่ผิดบ่อยที่สุด · ทำใหม่ได้ทุกเมื่อ</p>
+          {notebook.length === 0 && <div className="card text-center text-muted-fg">ไม่มีข้อในหมวดนี้</div>}
           {notebook.map(card)}
         </>
       )}

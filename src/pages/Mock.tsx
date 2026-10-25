@@ -1,3 +1,5 @@
+import { AlarmClock, Timer } from 'lucide-react';
+import { ICON, PageTitle } from '../components/ui';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { db } from '../db/db';
@@ -38,8 +40,8 @@ function Builder({ data }: { data: AppData }) {
 
   return (
     <>
-      <h1 className="text-xl font-bold">⏱️ ฝึกจับเวลา</h1>
-      <p className="text-sm text-slate-500">
+      <PageTitle icon={Timer}>ฝึกจับเวลา</PageTitle>
+      <p className="text-sm text-muted-fg">
         สุ่มโจทย์คละวิชาจากหนังสือ เน้นข้อที่เคยผิดและหัวข้อที่ยังอ่อน ทำในกระดาษแบบไม่ดูเฉลย แล้วกลับมาตรวจ
       </p>
       {done.length > 0 && done.at(-1)!.date === todayISO() && <LastResult data={data} />}
@@ -54,9 +56,10 @@ function Builder({ data }: { data: AppData }) {
                 <button
                   key={sub.id}
                   onClick={() => setPicked(on ? picked.filter((x) => x !== sub.id) : [...picked, sub.id!])}
-                  className={`rounded-full px-3 py-1 text-sm ${on ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 ring-1 ring-slate-200'}`}
+                  className="chip"
+                  aria-pressed={on}
                 >
-                  <span className="mr-1.5 inline-block h-2 w-2 rounded-full" style={{ background: sub.color }} />
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: sub.color }} aria-hidden />
                   {sub.name}
                 </button>
               );
@@ -67,7 +70,7 @@ function Builder({ data }: { data: AppData }) {
           <div className="label">จำนวนข้อ</div>
           <div className="grid grid-cols-4 gap-2">
             {SIZES.map((n) => (
-              <button key={n} onClick={() => setSize(n)} className={`btn py-1.5 ${size === n ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}`}>{n}</button>
+              <button key={n} onClick={() => setSize(n)} className="chip justify-center" aria-pressed={size === n}>{n}</button>
             ))}
           </div>
         </div>
@@ -75,11 +78,11 @@ function Builder({ data }: { data: AppData }) {
           <div className="label">เวลาต่อข้อ</div>
           <div className="grid grid-cols-3 gap-2">
             {PACES.map((p) => (
-              <button key={p} onClick={() => setPace(p)} className={`btn py-1.5 ${pace === p ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}`}>{p} นาที</button>
+              <button key={p} onClick={() => setPace(p)} className="chip justify-center" aria-pressed={pace === p}>{p} นาที</button>
             ))}
           </div>
         </div>
-        <button className="btn-primary w-full py-3" disabled={!picked.length} onClick={start}>
+        <button className="btn-cta w-full py-3 text-base" disabled={!picked.length} onClick={start}>
           เริ่ม {size} ข้อ · {formatClock(Math.round(size * pace * 60))} นาที
         </button>
       </section>
@@ -87,8 +90,8 @@ function Builder({ data }: { data: AppData }) {
       {done.length > 0 && (
         <>
           <section className="card">
-            <h2 className="font-bold">คะแนนแต่ละชุด</h2>
-            <p className="mb-2 text-xs text-slate-500">% ถูก · ชุดล่าสุดอยู่ขวาสุด</p>
+            <h2 className="text-lg font-bold">คะแนนแต่ละชุด</h2>
+            <p className="mb-2 text-xs text-muted-fg">% ถูก · ชุดล่าสุดอยู่ขวาสุด</p>
             <ScoreTrend
               points={done.slice(-15).map((m) => {
                 const sc = scoreSet(m.items, m.results ?? []);
@@ -97,8 +100,8 @@ function Builder({ data }: { data: AppData }) {
             />
           </section>
           <section className="card">
-            <h2 className="mb-2 font-bold">ประวัติ</h2>
-            <ul className="divide-y divide-slate-100 text-sm">
+            <h2 className="mb-2 text-lg font-bold">ประวัติ</h2>
+            <ul className="divide-y divide-muted text-sm">
               {[...done].reverse().slice(0, 10).map((m) => {
                 const sc = scoreSet(m.items, m.results ?? []);
                 return (
@@ -107,7 +110,7 @@ function Builder({ data }: { data: AppData }) {
                       <span>{formatThai(m.date)}</span>
                       <b>{sc.correct}/{sc.total} ({pct(sc.total ? sc.correct / sc.total : null)})</b>
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-muted-fg">
                       ใช้เวลา {formatClock(usedSec(m, Date.now()))} / {formatClock(m.limitSec)} ·{' '}
                       {sc.bySubject.map((b) => `${subjectName.get(b.subjectId) ?? '?'} ${b.correct}/${b.total}`).join(' · ')}
                     </div>
@@ -136,8 +139,8 @@ function ItemLabel({ data, i, set }: { data: AppData; i: number; set: MockSet })
   const topic = data.topics.find((t) => t.id === it.topicId);
   return (
     <span className="min-w-0 flex-1">
-      <span className="mr-2 inline-block w-6 text-right text-xs text-slate-400">{i + 1}.</span>
-      <span className="text-slate-500">{topic?.name ?? 'หัวข้อที่ถูกลบ'}</span> <b>ข้อ {it.problemNo}</b>
+      <span className="mr-2 inline-block w-6 text-right text-xs text-muted-fg">{i + 1}.</span>
+      <span className="text-muted-fg">{topic?.name ?? 'หัวข้อที่ถูกลบ'}</span> <b>ข้อ {it.problemNo}</b>
     </span>
   );
 }
@@ -165,14 +168,14 @@ function Running({ data, set }: { data: AppData; set: MockSet }) {
 
   return (
     <>
-      <div className={`sticky top-0 z-10 -mx-4 px-4 py-3 text-center shadow-sm ${warn ? 'bg-rose-600' : 'bg-indigo-600'} text-white`}>
-        <div className="text-xs opacity-80">เหลือเวลา</div>
-        <div className="font-mono text-4xl font-bold tabular-nums" role="timer" aria-live="off">{formatClock(left)}</div>
-        <div className="text-xs opacity-80">{set.items.length} ข้อ · ทำในกระดาษ ไม่ดูเฉลย</div>
+      <div className={`sticky top-[env(safe-area-inset-top)] z-10 rounded-[1.75rem] px-4 py-3 text-center text-white transition-colors duration-300 ${warn ? 'bg-danger shadow-[0_5px_0_0_#7f1d1d]' : 'bg-primary shadow-[0_5px_0_0_var(--color-primary-strong)]'}`}>
+        <div className="text-sm text-white/90">{warn ? 'ใกล้หมดเวลา!' : 'เหลือเวลา'}</div>
+        <div className="font-display text-5xl font-bold tabular-nums" role="timer" aria-live="off" aria-label={`เหลือเวลา ${formatClock(left)}`}>{formatClock(left)}</div>
+        <div className="text-sm text-white/90">{set.items.length} ข้อ · ทำในกระดาษ ไม่ดูเฉลย</div>
       </div>
       {grouped(data, set).map((g) => (
         <section key={g.idx[0]} className="card">
-          <h2 className="mb-2 flex items-center gap-2 font-bold">
+          <h2 className="mb-2 flex items-center gap-2 text-lg font-bold">
             <span className="h-3 w-3 rounded-full" style={{ background: g.subject?.color }} />
             {g.subject?.name}
           </h2>
@@ -183,11 +186,11 @@ function Running({ data, set }: { data: AppData; set: MockSet }) {
           </ul>
         </section>
       ))}
-      <div className="sticky bottom-20 z-10">
-        <button className="btn-primary w-full py-3 shadow-lg" onClick={() => stopMock(db, set.id!)}>ทำเสร็จแล้ว · ไปตรวจ</button>
+      <div className="sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-10">
+        <button className="btn-cta w-full py-3 text-base" onClick={() => stopMock(db, set.id!)}>ทำเสร็จแล้ว · ไปตรวจ</button>
       </div>
       <button
-        className="w-full text-sm text-rose-600 underline"
+        className="min-h-11 w-full text-sm font-semibold text-danger underline"
         onClick={() => confirm('ยกเลิกชุดนี้? จะไม่บันทึกผล') && db.mockSets.delete(set.id!)}
       >
         ยกเลิกชุดนี้
@@ -219,13 +222,15 @@ function Grade({ data, set }: { data: AppData; set: MockSet }) {
   return (
     <>
       <div className="card text-center">
-        <div className="text-sm text-slate-500">{timeUp ? '⏰ หมดเวลา!' : 'หยุดเวลาแล้ว'}</div>
+        <div className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-fg">
+          <AlarmClock size={ICON.sm} aria-hidden /> {timeUp ? 'หมดเวลา!' : 'หยุดเวลาแล้ว'}
+        </div>
         <div className="text-lg">ใช้เวลา <b>{formatClock(used)}</b> / {formatClock(set.limitSec)}</div>
-        <div className="mt-1 text-sm text-slate-500">เปิดเฉลยในหนังสือ แล้วตรวจทีละข้อ</div>
+        <div className="mt-1 text-sm text-muted-fg">เปิดเฉลยในหนังสือ แล้วตรวจทีละข้อ</div>
       </div>
       {grouped(data, set).map((g) => (
         <section key={g.idx[0]} className="card">
-          <h2 className="mb-2 flex items-center gap-2 font-bold">
+          <h2 className="mb-2 flex items-center gap-2 text-lg font-bold">
             <span className="h-3 w-3 rounded-full" style={{ background: g.subject?.color }} />
             {g.subject?.name}
           </h2>
@@ -239,10 +244,11 @@ function Grade({ data, set }: { data: AppData; set: MockSet }) {
                       key={k}
                       onClick={() => setG(i, k)}
                       aria-label={`ข้อที่ ${i + 1} ${k === 'correct' ? 'ถูก' : k === 'wrong' ? 'ผิด' : 'ไม่ทัน'}`}
-                      className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold ${
+                      aria-pressed={grades[i] === k}
+                      className={`grid h-11 min-w-11 place-items-center rounded-xl px-2 text-sm font-bold transition-colors duration-100 ${
                         grades[i] === k
-                          ? k === 'correct' ? 'bg-emerald-500 text-white' : k === 'wrong' ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'
-                          : 'bg-slate-100 text-slate-600'
+                          ? k === 'correct' ? 'bg-success text-white' : k === 'wrong' ? 'bg-danger text-white' : 'bg-warning text-white'
+                          : 'bg-muted text-muted-fg shadow-[0_2px_0_0_var(--color-border)]'
                       }`}
                     >
                       {k === 'correct' ? '✓' : k === 'wrong' ? '✗' : 'ไม่ทัน'}
@@ -250,12 +256,13 @@ function Grade({ data, set }: { data: AppData; set: MockSet }) {
                   ))}
                 </div>
                 {grades[i] === 'wrong' && (
-                  <div className="mt-1 flex flex-wrap gap-1 pl-8">
+                  <div className="mt-2 flex flex-wrap gap-2 pl-8" role="group" aria-label={`ข้อที่ ${i + 1} ผิดเพราะ`}>
                     {(['concept', 'careless', 'misread'] as MistakeReason[]).map((r) => (
                       <button
                         key={r}
                         onClick={() => setReasons(reasons.map((x, j) => (j === i ? r : x)))}
-                        className={`rounded-full px-2.5 py-0.5 text-xs ${reasons[i] === r ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-700'}`}
+                        className="chip"
+                        aria-pressed={reasons[i] === r}
                       >
                         {MISTAKE_LABELS[r]}
                       </button>
@@ -267,13 +274,13 @@ function Grade({ data, set }: { data: AppData; set: MockSet }) {
           </ul>
         </section>
       ))}
-      <div className="sticky bottom-20 z-10 space-y-2">
+      <div className="sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-10 space-y-2">
         {ungraded > 0 && (
-          <button className="btn-ghost w-full bg-white shadow" onClick={() => setGrades(grades.map((g) => g ?? 'correct'))}>
+          <button className="btn-ghost w-full bg-card" onClick={() => setGrades(grades.map((g) => g ?? 'correct'))}>
             ที่เหลือ {ungraded} ข้อ ถูกหมด
           </button>
         )}
-        <button className="btn-primary w-full py-3 shadow-lg" disabled={ungraded > 0} onClick={save}>
+        <button className="btn-cta w-full py-3 text-base" disabled={ungraded > 0} onClick={save}>
           {ungraded > 0 ? `ตรวจอีก ${ungraded} ข้อ` : `บันทึกผล ${score.correct}/${score.total}`}
         </button>
       </div>
@@ -289,14 +296,14 @@ export function LastResult({ data }: { data: AppData }) {
   const name = new Map(data.subjects.map((x) => [x.id!, x]));
   return (
     <section className="card">
-      <h2 className="font-bold">ผลชุดล่าสุด · {formatThai(last.date)}</h2>
-      <div className="my-2 text-3xl font-bold">{sc.correct}/{sc.total} <span className="text-base font-normal text-slate-500">({pct(sc.total ? sc.correct / sc.total : null)})</span></div>
+      <h2 className="text-lg font-bold">ผลชุดล่าสุด · {formatThai(last.date)}</h2>
+      <div className="my-2 font-display text-4xl font-bold">{sc.correct}/{sc.total} <span className="text-base font-normal text-muted-fg">({pct(sc.total ? sc.correct / sc.total : null)})</span></div>
       <BarList
         max={1}
         format={(v) => pct(v)}
         rows={sc.bySubject.map((b) => ({ key: String(b.subjectId), label: name.get(b.subjectId)?.name ?? '?', sub: `${b.correct}/${b.total}`, value: b.correct / b.total, color: name.get(b.subjectId)?.color ?? '#94a3b8' }))}
       />
-      <Link to="/review" className="mt-3 block text-sm text-indigo-600 underline">ข้อที่ผิดเข้าสมุดข้อผิดแล้ว · ไปทวน</Link>
+      <Link to="/review" className="mt-3 flex min-h-11 items-center text-sm font-semibold text-primary underline">ข้อที่ผิดเข้าสมุดข้อผิดแล้ว · ไปทวน</Link>
     </section>
   );
 }

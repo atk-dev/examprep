@@ -1,3 +1,5 @@
+import { CalendarPlus, Download, Settings as SettingsIcon, Trash2, Upload } from 'lucide-react';
+import { ICON, PageTitle, Toast } from '../components/ui';
 import { useRef, useState } from 'react';
 import { db } from '../db/db';
 import { saveSettings } from '../db/actions';
@@ -74,10 +76,10 @@ export default function SettingsPage({ data }: { data: AppData }) {
 
   return (
     <>
-      <h1 className="text-xl font-bold">⚙️ ตั้งค่า</h1>
+      <PageTitle icon={SettingsIcon}>ตั้งค่า</PageTitle>
 
       <section className="card space-y-3">
-        <h2 className="font-bold">การสอบและแผน</h2>
+        <h2 className="text-lg font-bold">การสอบและแผน</h2>
         <div>
           <label className="label" htmlFor="set-examName">ชื่อการสอบ</label>
           <input id="set-examName" className="input" value={s.examName} onChange={(e) => setS({ ...s, examName: e.target.value })} />
@@ -89,7 +91,7 @@ export default function SettingsPage({ data }: { data: AppData }) {
           {dateRow('จบช่วงแก้จุดอ่อน', 'phase2End')}
           {dateRow('จบช่วงฝึกจับเวลา', 'phase3End')}
         </div>
-        <button className="text-sm text-indigo-600 underline" onClick={() => setS({ ...s, ...defaultPhases(s.examDate) })}>
+        <button className="min-h-11 text-sm font-semibold text-primary underline" onClick={() => setS({ ...s, ...defaultPhases(s.examDate) })}>
           คำนวณช่วงจากวันสอบใหม่
         </button>
         <div>
@@ -98,7 +100,8 @@ export default function SettingsPage({ data }: { data: AppData }) {
             {TH_WEEKDAYS.map((w, i) => (
               <button
                 key={i}
-                className={`btn py-1.5 ${s.restWeekdays.includes(i) ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}`}
+                className="chip min-w-12 justify-center"
+                aria-pressed={s.restWeekdays.includes(i)}
                 onClick={() =>
                   setS({ ...s, restWeekdays: s.restWeekdays.includes(i) ? s.restWeekdays.filter((x) => x !== i) : [...s.restWeekdays, i] })
                 }
@@ -119,8 +122,8 @@ export default function SettingsPage({ data }: { data: AppData }) {
             onChange={(e) => setS({ ...s, parentPin: e.target.value.replace(/\D/g, '') })}
           />
         </div>
-        {!pinValid && <p className="text-sm text-rose-600">รหัส PIN ต้องมี 4 หลัก หรือเว้นว่าง</p>}
-        {!phasesValid && <p className="text-sm text-rose-600">ลำดับวันที่ไม่ถูกต้อง: เริ่ม ≤ รอบแรก &lt; แก้จุดอ่อน &lt; ฝึกจับเวลา &lt; วันสอบ</p>}
+        {!pinValid && <p className="text-sm font-semibold text-danger" role="alert">รหัส PIN ต้องมี 4 หลัก หรือเว้นว่าง</p>}
+        {!phasesValid && <p className="text-sm font-semibold text-danger" role="alert">ลำดับวันที่ไม่ถูกต้อง: เริ่ม ≤ รอบแรก &lt; แก้จุดอ่อน &lt; ฝึกจับเวลา &lt; วันสอบ</p>}
         <button
           className="btn-primary w-full"
           disabled={!dirty || !phasesValid || !pinValid}
@@ -134,15 +137,15 @@ export default function SettingsPage({ data }: { data: AppData }) {
       </section>
 
       <section className="card space-y-2">
-        <h2 className="font-bold">หัวข้อในแต่ละวิชา</h2>
-        <p className="text-sm text-slate-500">บรรทัดละหัวข้อ: ชื่อหัวข้อ, จำนวนข้อ — เปลี่ยนจำนวนข้อได้โดยไม่เสียประวัติ</p>
+        <h2 className="text-lg font-bold">หัวข้อในแต่ละวิชา</h2>
+        <p className="text-sm text-muted-fg">บรรทัดละหัวข้อ: ชื่อหัวข้อ, จำนวนข้อ — เปลี่ยนจำนวนข้อได้โดยไม่เสียประวัติ</p>
         {data.subjects.map((sub) => {
           const ts = data.topics.filter((t) => t.subjectId === sub.id);
           return (
-            <div key={sub.id} className="rounded-xl bg-slate-50 p-3">
-              <button className="flex w-full justify-between" onClick={() => setOpen(open === sub.id ? null : sub.id!)}>
+            <div key={sub.id} className="rounded-xl bg-muted/60 p-3">
+              <button className="flex min-h-11 w-full items-center justify-between" aria-expanded={open === sub.id} onClick={() => setOpen(open === sub.id ? null : sub.id!)}>
                 <span className="font-semibold">{sub.name}</span>
-                <span className="text-sm text-slate-500">
+                <span className="text-sm text-muted-fg">
                   {ts.length} หัวข้อ · {ts.reduce((n, t) => n + t.problemCount, 0)} ข้อ {open === sub.id ? '▲' : '▼'}
                 </span>
               </button>
@@ -157,8 +160,8 @@ export default function SettingsPage({ data }: { data: AppData }) {
       </section>
 
       <section className="card space-y-2">
-        <h2 className="font-bold">แจ้งเตือน</h2>
-        <p className="text-sm text-slate-500">
+        <h2 className="text-lg font-bold">แจ้งเตือน</h2>
+        <p className="text-sm text-muted-fg">
           เพิ่มนัด "ตะลุยโจทย์" ทุกวัน (ยกเว้นวันพัก) จนถึงวันสอบลงในปฏิทินของโทรศัพท์ ปฏิทินจะเตือนให้แม้ไม่ได้เปิดแอป
         </p>
         <div className="flex items-end gap-2">
@@ -172,20 +175,20 @@ export default function SettingsPage({ data }: { data: AppData }) {
               onChange={(e) => setS({ ...s, reminderTime: e.target.value })}
             />
           </div>
-          <button className="btn-primary" onClick={doReminder}>📅 เพิ่มลงปฏิทิน</button>
+          <button className="btn-primary" onClick={doReminder}><CalendarPlus size={ICON.md} aria-hidden /> เพิ่มลงปฏิทิน</button>
         </div>
-        <p className="text-xs text-slate-400">ถ้าเปลี่ยนเวลา ให้ลบนัดเดิมในปฏิทินก่อนเพิ่มใหม่</p>
+        <p className="text-xs text-muted-fg">ถ้าเปลี่ยนเวลา ให้ลบนัดเดิมในปฏิทินก่อนเพิ่มใหม่</p>
       </section>
 
       <section className="card space-y-2">
-        <h2 className="font-bold">สำรองข้อมูล</h2>
-        <p className="text-sm text-slate-500">ข้อมูลเก็บในเบราว์เซอร์เครื่องนี้เท่านั้น ควรสำรองทุกสัปดาห์ หรือใช้ย้ายไปเครื่องอื่น</p>
-        <p className="text-xs text-slate-400">
+        <h2 className="text-lg font-bold">สำรองข้อมูล</h2>
+        <p className="text-sm text-muted-fg">ข้อมูลเก็บในเบราว์เซอร์เครื่องนี้เท่านั้น ควรสำรองทุกสัปดาห์ หรือใช้ย้ายไปเครื่องอื่น</p>
+        <p className="text-xs text-muted-fg">
           สำรองล่าสุด: {data.settings!.lastBackupAt ? new Date(data.settings!.lastBackupAt).toLocaleString('th-TH') : 'ยังไม่เคย'}
         </p>
         <div className="flex gap-2">
-          <button className="btn-primary flex-1" onClick={doExport}>⬇️ ส่งออก</button>
-          <button className="btn-ghost flex-1" onClick={() => fileRef.current?.click()}>⬆️ นำเข้า</button>
+          <button className="btn-primary flex-1" onClick={doExport}><Download size={ICON.md} aria-hidden /> ส่งออก</button>
+          <button className="btn-ghost flex-1" onClick={() => fileRef.current?.click()}><Upload size={ICON.md} aria-hidden /> นำเข้า</button>
           <input
             ref={fileRef}
             type="file"
@@ -198,11 +201,13 @@ export default function SettingsPage({ data }: { data: AppData }) {
             }}
           />
         </div>
-        <button className="w-full pt-2 text-sm text-rose-600 underline" onClick={resetAll}>ลบข้อมูลทั้งหมด</button>
+        <button className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 text-sm font-semibold text-danger underline" onClick={resetAll}>
+          <Trash2 size={ICON.sm} aria-hidden /> ลบข้อมูลทั้งหมด
+        </button>
       </section>
 
       {msg && (
-        <div className="fixed inset-x-4 top-4 z-20 mx-auto max-w-md rounded-xl bg-slate-900 p-3 text-center text-white shadow-lg">{msg}</div>
+        <Toast>{msg}</Toast>
       )}
     </>
   );

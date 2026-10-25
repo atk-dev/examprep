@@ -32,6 +32,7 @@ The app has no server, so it can't push notifications. Instead, **ตั้ง�
 ## Setup
 1. Open the app, confirm the exam date.
 2. For each subject, paste topics from the book's contents, one per line: `ชื่อหัวข้อ, จำนวนข้อ`.
+   Or tap **ใช้หัวข้อตัวอย่าง** to fill sample topics from the ป.4–6 curriculum (75 topics) with a problem count you choose (default 20 each), then edit them to match the book.
 3. Pick rest days. Done.
 
 ## Develop

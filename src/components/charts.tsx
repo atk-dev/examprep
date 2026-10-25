@@ -4,9 +4,9 @@ import { addDaysISO, diffDays, formatThai, fromISO, TH_MONTHS, TH_WEEKDAYS, week
 import type { DayCount, PlanPoint } from '../logic/insights';
 import type { ISODate } from '../types';
 
-const INK = { primary: '#0f172a', secondary: '#475569', muted: '#94a3b8', grid: '#e2e8f0', surface: '#ffffff' };
+const INK = { primary: '#1e1b4b', secondary: '#475569', muted: '#64748b', grid: '#e0e7ff', surface: '#ffffff' };
 const ACTUAL = '#4f46e5';
-const PLAN = '#94a3b8';
+const PLAN = '#64748b';
 
 function niceStep(max: number, ticks = 4) {
   const raw = Math.max(max, 1) / ticks;
@@ -19,7 +19,7 @@ function niceStep(max: number, ticks = 4) {
 export function PlanChart({ points, today }: { points: PlanPoint[]; today: ISODate }) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
-  if (points.length < 2) return <div ref={ref} className="py-6 text-center text-sm text-slate-400">ยังไม่มีข้อมูล</div>;
+  if (points.length < 2) return <div ref={ref} className="py-6 text-center text-sm text-muted-fg">ยังไม่มีข้อมูล</div>;
 
   const h = 200;
   const m = { top: 12, right: 44, bottom: 24, left: 36 };
@@ -48,7 +48,7 @@ export function PlanChart({ points, today }: { points: PlanPoint[]; today: ISODa
 
   return (
     <div ref={ref} className="relative">
-      <div className="mb-2 flex gap-4 text-xs text-slate-600">
+      <div className="mb-2 flex gap-4 text-xs text-muted-fg">
         <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 rounded" style={{ background: ACTUAL }} />ทำจริง</span>
         <span className="flex items-center gap-1.5"><span className="w-4 border-t-2 border-dashed" style={{ borderColor: PLAN }} />แผน</span>
       </div>
@@ -90,7 +90,7 @@ export function PlanChart({ points, today }: { points: PlanPoint[]; today: ISODa
       </svg>
       {hp && (
         <div
-          className="pointer-events-none absolute top-6 z-10 rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs text-white shadow"
+          className="pointer-events-none absolute top-6 z-10 rounded-lg bg-fg px-2.5 py-1.5 text-xs text-white shadow"
           style={{ left: Math.min(Math.max(x(hover!) - 60, 0), width - 130) }}
         >
           <div className="font-semibold">{formatThai(hp.date)}</div>
@@ -103,56 +103,75 @@ export function PlanChart({ points, today }: { points: PlanPoint[]; today: ISODa
 }
 
 // Sequential single-hue ramp (light -> dark) for problems per day.
-const HEAT = ['#f1f5f9', '#e0e7ff', '#a5b4fc', '#6366f1', '#4338ca'];
+const HEAT = ['#ebeef8', '#e0e7ff', '#a5b4fc', '#6366f1', '#4338ca'];
 const HEAT_STOPS = [1, 8, 17, 30]; // >= stop -> next step
 const CELL = 11; // 22 weeks (the whole prep period) fit a 390px phone screen
 const heatColor = (n: number) => HEAT[HEAT_STOPS.filter((s) => n >= s).length];
 
 /** Study calendar: one column per week, one cell per day. Tap or hover a day for details. */
 export function CalendarHeatmap({ counts, from, to, today }: { counts: Map<ISODate, DayCount>; from: ISODate; to: ISODate; today: ISODate }) {
-  const [sel, setSel] = useState<ISODate | null>(null);
+  const last = today < to ? today : to;
+  const [sel, setSel] = useState<ISODate>(last);
   const start = addDaysISO(from, -weekday(from)); // back to Sunday
   const weeks = Math.max(1, Math.ceil((diffDays(to, start) + 1) / 7));
-  const cell = sel ? counts.get(sel) : undefined;
+  const cell = counts.get(sel);
+  const step = (n: number) => {
+    const d = addDaysISO(sel, n);
+    if (d >= from && d <= last) setSel(d);
+  };
+
+  // Cells are display-only (too small to be tap targets); the ‹ › buttons and tapping
+  // anywhere on the grid choose the day, so every day is reachable by touch and keyboard.
+  function pick(e: React.PointerEvent<HTMLDivElement>) {
+    const el = (e.target as HTMLElement).closest('[data-day]') as HTMLElement | null;
+    const d = el?.dataset.day;
+    if (d && d >= from && d <= last) setSel(d);
+  }
 
   return (
     <div>
-      <div className="mb-2 min-h-5 text-xs text-slate-600">
-        {sel ? (
-          <>
-            <b>{formatThai(sel)}</b> · {cell ? `${cell.total} ข้อ (ถูก ${cell.correct} ผิด ${cell.wrong}${cell.review ? `, ทวน ${cell.review}` : ''})` : 'ไม่ได้ทำโจทย์'}
-          </>
-        ) : (
-          'แตะช่องเพื่อดูรายละเอียด'
-        )}
+      <div className="mb-2 flex items-center gap-2">
+        <button className="btn-ghost h-11 w-11 shrink-0 p-0" onClick={() => step(-1)} disabled={sel <= from} aria-label="วันก่อนหน้า">‹</button>
+        <p className="min-w-0 flex-1 text-center text-sm" aria-live="polite">
+          <b>{formatThai(sel)}</b>
+          <br />
+          <span className="text-muted-fg">
+            {cell ? `${cell.total} ข้อ · ถูก ${cell.correct} ผิด ${cell.wrong}${cell.review ? ` · ทวน ${cell.review}` : ''}` : 'ไม่ได้ทำโจทย์'}
+          </span>
+        </p>
+        <button className="btn-ghost h-11 w-11 shrink-0 p-0" onClick={() => step(1)} disabled={sel >= last} aria-label="วันถัดไป">›</button>
       </div>
       <div className="flex gap-1">
-        <div className="grid gap-[3px] pr-1 text-[10px] leading-none text-slate-400" style={{ gridTemplateRows: `repeat(7, ${CELL}px)` }}>
+        <div aria-hidden className="grid gap-[3px] pr-1 text-xs leading-none text-muted-fg" style={{ gridTemplateRows: `repeat(7, ${CELL}px)` }}>
           {TH_WEEKDAYS.map((w, i) => (
             <span key={w} className="flex items-center">{i % 2 ? w : ''}</span>
           ))}
         </div>
-        <div className="grid grid-flow-col gap-[3px] overflow-x-auto" style={{ gridTemplateRows: `repeat(7, ${CELL}px)`, gridAutoColumns: `${CELL}px` }}>
+        <div
+          aria-hidden
+          onPointerDown={pick}
+          onPointerMove={(e) => e.pointerType === 'mouse' && pick(e)}
+          className="grid grid-flow-col gap-[3px] overflow-x-auto"
+          style={{ gridTemplateRows: `repeat(7, ${CELL}px)`, gridAutoColumns: `${CELL}px` }}
+        >
           {Array.from({ length: weeks * 7 }, (_, i) => {
             const d = addDaysISO(start, i);
             const out = d < from || d > to;
             const n = counts.get(d)?.total ?? 0;
             const future = d > today;
             return (
-              <button
+              <div
                 key={d}
-                disabled={out || future}
-                title={`${formatThai(d)}: ${n} ข้อ`}
-                onClick={() => setSel(d)}
-                onMouseEnter={() => setSel(d)}
-                className={`h-full w-full rounded-[3px] ${sel === d ? 'ring-2 ring-slate-900' : future && !out ? 'ring-1 ring-inset ring-slate-200' : ''}`}
+                data-day={d}
+                title={out ? undefined : `${formatThai(d)}: ${n} ข้อ`}
+                className={`h-full w-full rounded-[3px] ${sel === d ? 'ring-2 ring-fg' : future && !out ? 'ring-1 ring-inset ring-border' : ''}`}
                 style={{ background: out || future ? 'transparent' : heatColor(n) }}
               />
             );
           })}
         </div>
       </div>
-      <div className="mt-2 flex items-center justify-end gap-1 text-[10px] text-slate-400">
+      <div className="mt-2 flex items-center justify-end gap-1 text-xs text-muted-fg" aria-hidden>
         น้อย {HEAT.map((c) => <span key={c} className="h-2.5 w-2.5 rounded-[2px]" style={{ background: c }} />)} มาก
       </div>
     </div>
@@ -175,10 +194,10 @@ export function BarList({
       {rows.map((r) => (
         <li key={r.key}>
           <div className="mb-1 flex justify-between text-sm">
-            <span className="text-slate-700">{r.label}{r.sub && <span className="ml-1 text-xs text-slate-400">{r.sub}</span>}</span>
-            <span className="font-semibold text-slate-900">{r.value === null ? '–' : format(r.value)}</span>
+            <span className="text-fg">{r.label}{r.sub && <span className="ml-1 text-xs text-muted-fg">{r.sub}</span>}</span>
+            <span className="font-semibold text-fg">{r.value === null ? '–' : format(r.value)}</span>
           </div>
-          <div className="h-2.5 rounded-r bg-slate-100">
+          <div className="h-2.5 rounded-r bg-muted">
             <div className="h-full rounded-r transition-all" style={{ width: `${((r.value ?? 0) / top) * 100}%`, background: r.color }} />
           </div>
         </li>
@@ -194,9 +213,9 @@ export function WeekColumns({ days }: { days: { date: ISODate; total: number }[]
     <div className="flex h-28 items-end gap-2">
       {days.map((d) => (
         <div key={d.date} className="flex flex-1 flex-col items-center gap-1" title={`${formatThai(d.date)}: ${d.total} ข้อ`}>
-          <span className="text-xs font-semibold text-slate-700">{d.total || ''}</span>
+          <span className="text-xs font-semibold text-fg">{d.total || ''}</span>
           <div className="w-full max-w-6 rounded-t" style={{ height: `${Math.max((d.total / top) * 64, d.total ? 4 : 2)}px`, background: d.total ? ACTUAL : INK.grid }} />
-          <span className="text-[10px] text-slate-500">{TH_WEEKDAYS[weekday(d.date)]}</span>
+          <span className="text-xs text-muted-fg">{TH_WEEKDAYS[weekday(d.date)]}</span>
         </div>
       ))}
     </div>
@@ -242,7 +261,7 @@ export function ScoreTrend({ points }: { points: { label: string; value: number;
         {last > 0 && <text x={m.left + iw} y={h - 4} textAnchor="end" fontSize={11} fill={INK.muted}>{points[last].label}</text>}
       </svg>
       {hp && (
-        <div className="pointer-events-none absolute top-0 z-10 rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs text-white shadow" style={{ left: Math.min(Math.max(x(hover!) - 60, 0), width - 130) }}>
+        <div className="pointer-events-none absolute top-0 z-10 rounded-lg bg-fg px-2.5 py-1.5 text-xs text-white shadow" style={{ left: Math.min(Math.max(x(hover!) - 60, 0), width - 130) }}>
           <div className="font-semibold">{hp.label}</div>
           <div>{Math.round(hp.value * 100)}% · {hp.sub}</div>
         </div>

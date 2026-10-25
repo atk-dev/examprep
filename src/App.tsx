@@ -19,7 +19,14 @@ export default function App() {
   }, []);
   const data = useAppData();
 
-  if (!data) return <div className="p-8 text-center text-slate-500">กำลังโหลด…</div>;
+  if (!data)
+    return (
+      <div className="mx-auto max-w-2xl space-y-4 p-4" aria-busy="true" aria-label="กำลังโหลด">
+        {[180, 140, 120].map((h) => (
+          <div key={h} className="card animate-pulse bg-card/70" style={{ height: h }} />
+        ))}
+      </div>
+    );
   if (!data.settings?.setupDone) return <Setup data={data} />;
 
   return (

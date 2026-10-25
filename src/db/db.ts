@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { Attempt, DailyLog, ProblemState, Settings, Subject, Topic } from '../types';
+import type { Attempt, DailyLog, ProblemNote, ProblemState, Settings, Subject, Topic } from '../types';
 
 export class ExamDB extends Dexie {
   settings!: Table<Settings, string>;
@@ -8,6 +8,7 @@ export class ExamDB extends Dexie {
   attempts!: Table<Attempt, number>;
   problemStates!: Table<ProblemState, string>;
   dailyLogs!: Table<DailyLog, string>;
+  problemNotes!: Table<ProblemNote, string>;
 
   constructor(name = 'examprep') {
     super(name);
@@ -19,6 +20,7 @@ export class ExamDB extends Dexie {
       problemStates: 'key, topicId, status, nextReview',
       dailyLogs: 'date',
     });
+    this.version(2).stores({ problemNotes: 'key, topicId' });
   }
 }
 

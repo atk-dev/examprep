@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
 import { ExamDB } from './db';
-import { replaceTopics, saveMarks, seedIfEmpty } from './actions';
+import { replaceTopics, saveMarks, saveNote, seedIfEmpty } from './actions';
 import { exportBackup, importBackup, parseBackup } from './backup';
 import { defaultSettings, parseTopicLines } from './defaults';
 
@@ -36,12 +36,25 @@ describe('db', () => {
     expect(await db.topics.where('subjectId').equals(math.id!).count()).toBe(1);
     expect(await db.attempts.count()).toBe(2);
 
+    await saveNote(db, t1.id!, 2, '  ต้องแปลงเป็นส่วนร่วมก่อน  ');
     const backup = parseBackup(JSON.stringify(await exportBackup(db)));
     const db2 = new ExamDB('t2');
     await importBackup(db2, backup);
     expect(await db2.attempts.count()).toBe(2);
     expect(await db2.subjects.count()).toBe(5);
     expect((await db2.problemStates.get(`${t1.id}:2`))?.status).toBe('wrong');
+    expect((await db2.problemNotes.get(`${t1.id}:2`))?.text).toBe('ต้องแปลงเป็นส่วนร่วมก่อน');
+  });
+
+  it('imports v1 backups without notes, and empty note deletes', async () => {
+    const db = new ExamDB('t3');
+    await importBackup(db, parseBackup(JSON.stringify({
+      app: 'examprep', version: 1, exportedAt: '', data: { settings: [], subjects: [], topics: [], attempts: [], dailyLogs: [] },
+    })));
+    expect(await db.problemNotes.count()).toBe(0);
+    await saveNote(db, 1, 1, 'x');
+    await saveNote(db, 1, 1, '   ');
+    expect(await db.problemNotes.count()).toBe(0);
   });
 
   it('rejects bad backups', () => {

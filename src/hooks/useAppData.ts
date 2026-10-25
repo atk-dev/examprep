@@ -7,15 +7,16 @@ import type { ProblemState } from '../types';
 /** Everything the screens need, kept live from IndexedDB. Data is small (a few thousand rows). */
 export function useAppData() {
   const data = useLiveQuery(async () => {
-    const [settings, subjects, topics, states, attempts, dailyLogs] = await Promise.all([
+    const [settings, subjects, topics, states, attempts, dailyLogs, notes] = await Promise.all([
       db.settings.get('main'),
       db.subjects.orderBy('order').toArray(),
       db.topics.orderBy('order').toArray(),
       db.problemStates.toArray(),
       db.attempts.toArray(),
       db.dailyLogs.toArray(),
+      db.problemNotes.toArray(),
     ]);
-    return { settings, subjects, topics, states, attempts, dailyLogs };
+    return { settings, subjects, topics, states, attempts, dailyLogs, notes: new Map(notes.map((n) => [n.key, n.text])) };
   }, []);
 
   const derived = useMemo(() => {

@@ -74,3 +74,11 @@ export interface DailyLog {
   minutes: number;
   note?: string;
 }
+
+/** Student's own note on a problem (e.g. the key idea from the solution). Kept apart from derived state. */
+export interface ProblemNote {
+  key: string; // `${topicId}:${problemNo}`
+  topicId: number;
+  text: string;
+  updatedAt: number;
+}

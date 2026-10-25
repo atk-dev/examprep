@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
 import { db } from '../db/db';
 import { formatThai, todayISO } from '../logic/dates';
-import { aheadBehind, currentPhase, dailyQuota, daysUntilExam, isRestDay } from '../logic/plan';
+import { planGap } from '../logic/insights';
+import { currentPhase, dailyQuota, daysUntilExam, isRestDay } from '../logic/plan';
 import { dueReviews } from '../logic/review';
 import { streak } from '../logic/stats';
 import { suggestToday } from '../logic/suggest';
@@ -21,7 +22,7 @@ export default function Today({ data }: { data: AppData }) {
   const suggestions = suggestToday(data.progress, quotaLeft, today, data.firstUntried);
   const due = dueReviews(data.states, today);
   const reviewedToday = data.attempts.filter((a) => a.date === today && a.isReview).length;
-  const gap = aheadBehind(s, today, data.done - doneTodayNew, data.total);
+  const gap = planGap(s, today, data.states, data.total);
   const days = streak(data.attempts, today);
   const minutes = data.dailyLogs.find((l) => l.date === today)?.minutes ?? 0;
 
@@ -30,7 +31,10 @@ export default function Today({ data }: { data: AppData }) {
   return (
     <>
       <section className="rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 p-5 text-white shadow">
-        <div className="text-sm opacity-80">{s.examName} · {formatThai(s.examDate)}</div>
+        <div className="flex items-start justify-between">
+          <div className="text-sm opacity-80">{s.examName} · {formatThai(s.examDate)}</div>
+          <Link to="/parent" className="rounded-full bg-white/15 px-2.5 py-1 text-xs">👪 ผู้ปกครอง</Link>
+        </div>
         <div className="mt-1 flex items-end gap-2">
           <span className="text-5xl font-bold">{Math.max(daysLeft, 0)}</span>
           <span className="pb-1.5 text-lg">วันก่อนสอบ</span>

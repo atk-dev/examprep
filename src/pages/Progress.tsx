@@ -1,11 +1,33 @@
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import Stats from './Stats';
 import { LEVEL_STYLE, ProgressBar, pct } from '../components/ui';
 import type { AppData } from '../hooks/useAppData';
 
 export default function Progress({ data }: { data: AppData }) {
+  const [params, setParams] = useSearchParams();
+  const tab = params.get('tab') === 'stats' ? 'stats' : 'topics';
   return (
     <>
       <h1 className="text-xl font-bold">📊 ความคืบหน้า</h1>
+      <div className="grid grid-cols-2 rounded-xl bg-slate-200 p-1 text-sm">
+        {(['topics', 'stats'] as const).map((t) => (
+          <button
+            key={t}
+            className={`rounded-lg py-1.5 font-semibold ${tab === t ? 'bg-white shadow-sm' : 'text-slate-600'}`}
+            onClick={() => setParams(t === 'stats' ? { tab: 'stats' } : {}, { replace: true })}
+          >
+            {t === 'topics' ? 'รายหัวข้อ' : 'สถิติ'}
+          </button>
+        ))}
+      </div>
+      {tab === 'stats' ? <Stats data={data} /> : <TopicList data={data} />}
+    </>
+  );
+}
+
+function TopicList({ data }: { data: AppData }) {
+  return (
+    <>
       <div className="card">
         <div className="flex justify-between text-sm">
           <span>ทำแล้ว {data.done} / {data.total} ข้อ</span>

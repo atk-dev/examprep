@@ -50,7 +50,7 @@ export async function replaceTopics(
   subjectId: number,
   items: { name: string; problemCount: number }[],
 ) {
-  await db.transaction('rw', db.topics, db.attempts, db.problemStates, async () => {
+  await db.transaction('rw', [db.topics, db.attempts, db.problemStates, db.problemNotes], async () => {
     const existing = await db.topics.where('subjectId').equals(subjectId).toArray();
     const byName = new Map(existing.map((t) => [t.name, t]));
     const keepIds = new Set<number>();
@@ -66,6 +66,7 @@ export async function replaceTopics(
       await db.topics.bulkDelete(removed);
       await db.attempts.where('topicId').anyOf(removed).delete();
       await db.problemStates.where('topicId').anyOf(removed).delete();
+      await db.problemNotes.where('topicId').anyOf(removed).delete();
     }
     await db.topics.bulkPut(rows);
   });
@@ -77,4 +78,10 @@ export async function rebuildAllStates(db: ExamDB) {
     await db.problemStates.clear();
     await db.problemStates.bulkPut([...map.values()]);
   });
+}
+
+export async function saveNote(db: ExamDB, topicId: number, problemNo: number, text: string) {
+  const key = problemKey(topicId, problemNo);
+  if (text.trim()) await db.problemNotes.put({ key, topicId, text: text.trim(), updatedAt: Date.now() });
+  else await db.problemNotes.delete(key);
 }

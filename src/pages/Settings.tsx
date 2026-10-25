@@ -14,6 +14,7 @@ export default function SettingsPage({ data }: { data: AppData }) {
   const [open, setOpen] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const dirty = JSON.stringify(s) !== JSON.stringify(data.settings);
+  const pinValid = s.parentPin.length === 0 || s.parentPin.length === 4;
   const phasesValid = s.startDate <= s.phase1End && s.phase1End < s.phase2End && s.phase2End < s.phase3End && s.phase3End < s.examDate;
 
   const flash = (m: string) => {
@@ -51,8 +52,8 @@ export default function SettingsPage({ data }: { data: AppData }) {
 
   const dateRow = (label: string, key: keyof Settings) => (
     <div>
-      <label className="label">{label}</label>
-      <input type="date" className="input" value={s[key] as string} onChange={(e) => setS({ ...s, [key]: e.target.value })} />
+      <label className="label" htmlFor={`set-${key}`}>{label}</label>
+      <input id={`set-${key}`} type="date" className="input" value={s[key] as string} onChange={(e) => setS({ ...s, [key]: e.target.value })} />
     </div>
   );
 
@@ -63,8 +64,8 @@ export default function SettingsPage({ data }: { data: AppData }) {
       <section className="card space-y-3">
         <h2 className="font-bold">การสอบและแผน</h2>
         <div>
-          <label className="label">ชื่อการสอบ</label>
-          <input className="input" value={s.examName} onChange={(e) => setS({ ...s, examName: e.target.value })} />
+          <label className="label" htmlFor="set-examName">ชื่อการสอบ</label>
+          <input id="set-examName" className="input" value={s.examName} onChange={(e) => setS({ ...s, examName: e.target.value })} />
         </div>
         {dateRow('วันสอบ', 'examDate')}
         <div className="grid grid-cols-2 gap-3">
@@ -93,8 +94,9 @@ export default function SettingsPage({ data }: { data: AppData }) {
           </div>
         </div>
         <div>
-          <label className="label">รหัส PIN ผู้ปกครอง (4 หลัก)</label>
+          <label className="label" htmlFor="set-pin">รหัส PIN หน้าผู้ปกครอง (4 หลัก, เว้นว่าง = ไม่ล็อก)</label>
           <input
+            id="set-pin"
             className="input"
             inputMode="numeric"
             maxLength={4}
@@ -102,10 +104,11 @@ export default function SettingsPage({ data }: { data: AppData }) {
             onChange={(e) => setS({ ...s, parentPin: e.target.value.replace(/\D/g, '') })}
           />
         </div>
+        {!pinValid && <p className="text-sm text-rose-600">รหัส PIN ต้องมี 4 หลัก หรือเว้นว่าง</p>}
         {!phasesValid && <p className="text-sm text-rose-600">ลำดับวันที่ไม่ถูกต้อง: เริ่ม ≤ รอบแรก &lt; แก้จุดอ่อน &lt; ฝึกจับเวลา &lt; วันสอบ</p>}
         <button
           className="btn-primary w-full"
-          disabled={!dirty || !phasesValid}
+          disabled={!dirty || !phasesValid || !pinValid}
           onClick={async () => {
             await saveSettings(db, s);
             flash('บันทึกการตั้งค่าแล้ว ✓');

@@ -1,7 +1,7 @@
 import type { ExamDB } from './db';
 import { rebuildAllStates } from './actions';
 
-export const BACKUP_VERSION = 1;
+export const BACKUP_VERSION = 2;
 
 export interface Backup {
   app: 'examprep';
@@ -13,6 +13,7 @@ export interface Backup {
     topics: unknown[];
     attempts: unknown[];
     dailyLogs: unknown[];
+    problemNotes?: unknown[]; // added in v2
   };
 }
 
@@ -27,6 +28,7 @@ export async function exportBackup(db: ExamDB): Promise<Backup> {
       topics: await db.topics.toArray(),
       attempts: await db.attempts.toArray(),
       dailyLogs: await db.dailyLogs.toArray(),
+      problemNotes: await db.problemNotes.toArray(),
     },
   };
 }
@@ -46,6 +48,7 @@ export function parseBackup(json: string): Backup {
   for (const k of ['settings', 'subjects', 'topics', 'attempts', 'dailyLogs'] as const) {
     if (!Array.isArray(b.data[k])) throw new Error(`ข้อมูล ${k} ไม่ถูกต้อง`);
   }
+  if (b.data.problemNotes !== undefined && !Array.isArray(b.data.problemNotes)) throw new Error('ข้อมูล problemNotes ไม่ถูกต้อง');
   return b;
 }
 
@@ -58,6 +61,7 @@ export async function importBackup(db: ExamDB, b: Backup) {
     await db.topics.bulkPut(b.data.topics as never[]);
     await db.attempts.bulkPut(b.data.attempts as never[]);
     await db.dailyLogs.bulkPut(b.data.dailyLogs as never[]);
+    await db.problemNotes.bulkPut((b.data.problemNotes ?? []) as never[]);
   });
   await rebuildAllStates(db);
 }

@@ -10,6 +10,7 @@ import Log from './pages/Log';
 import Review from './pages/Review';
 import Progress from './pages/Progress';
 import SettingsPage from './pages/Settings';
+import Parent from './pages/Parent';
 
 export default function App() {
   useEffect(() => {
@@ -27,6 +28,7 @@ export default function App() {
         <Route path="/log" element={<Log data={data} />} />
         <Route path="/review" element={<Review data={data} />} />
         <Route path="/progress" element={<Progress data={data} />} />
+        <Route path="/parent" element={<Parent data={data} />} />
         <Route path="/settings" element={<SettingsPage data={data} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

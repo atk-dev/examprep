@@ -2,7 +2,8 @@ import { useRef, useState } from 'react';
 import { importBackup, parseBackup } from '../db/backup';
 import { db } from '../db/db';
 import { defaultSettings, DEFAULT_EXAM_DATE } from '../db/defaults';
-import { saveSettings } from '../db/actions';
+import { replaceTopics, saveSettings } from '../db/actions';
+import { DEFAULT_TEMPLATE_COUNT, MAX_TEMPLATE_COUNT, clampCount, templateFor, templateItems } from '../db/templates';
 import { defaultPhases, studyDaysBetween } from '../logic/plan';
 import { TH_WEEKDAYS, todayISO } from '../logic/dates';
 import TopicEditor from '../components/TopicEditor';
@@ -18,6 +19,14 @@ export default function Setup({ data }: { data: AppData }) {
   const open = openState === undefined ? (data.subjects[0]?.id ?? null) : openState;
 
   const fileRef = useRef<HTMLInputElement>(null);
+  const [tplCount, setTplCount] = useState(String(DEFAULT_TEMPLATE_COUNT));
+  const emptyWithTemplate = data.subjects.filter((s) => templateFor(s.name) && !data.topics.some((t) => t.subjectId === s.id));
+
+  /** Fill sample topics into every subject that has none yet; subjects already set up are left alone. */
+  async function fillAllTemplates() {
+    const n = clampCount(tplCount);
+    for (const s of emptyWithTemplate) await replaceTopics(db, s.id!, templateItems(templateFor(s.name)!, n));
+  }
   const [importError, setImportError] = useState('');
 
   async function restore(file: File) {
@@ -89,6 +98,31 @@ export default function Setup({ data }: { data: AppData }) {
             <br />
             ข้อในแต่ละหัวข้อนับ 1, 2, 3… ตามเลขในหนังสือ แก้ไขภายหลังได้ที่หน้าตั้งค่า
           </div>
+          {emptyWithTemplate.length > 0 && (
+            <div className="card space-y-2 ring-2 ring-indigo-200">
+              <h2 className="font-bold">✨ เริ่มเร็ว: ใช้หัวข้อตัวอย่าง</h2>
+              <p className="text-sm text-slate-600">
+                ใส่หัวข้อตามหลักสูตร ป.4–6 ให้ {emptyWithTemplate.length} วิชาที่ยังว่าง แล้วค่อยแก้ให้ตรงกับหนังสือ
+              </p>
+              <div className="flex items-center gap-2 text-sm">
+                <label className="flex flex-1 items-center gap-1">
+                  หัวข้อละ
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={MAX_TEMPLATE_COUNT}
+                    className="input w-20 py-1 text-center"
+                    value={tplCount}
+                    onChange={(e) => setTplCount(e.target.value)}
+                    aria-label="จำนวนข้อต่อหัวข้อ ทุกวิชา"
+                  />
+                  ข้อ
+                </label>
+                <button className="btn-primary py-1.5" onClick={fillAllTemplates}>ใส่ให้ทุกวิชา</button>
+              </div>
+            </div>
+          )}
           {data.subjects.map((s) => {
             const ts = data.topics.filter((t) => t.subjectId === s.id);
             const n = ts.reduce((a, t) => a + t.problemCount, 0);

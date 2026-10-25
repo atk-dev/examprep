@@ -1,0 +1,107 @@
+import type { ExamDB } from './db';
+import type { ISODate, MistakeReason, MockItem, MockResult, Result, Settings, Topic } from '../types';
+import { applyAttempt, problemKey, rebuildStates } from '../logic/review';
+import { DEFAULT_SUBJECTS } from './defaults';
+
+export interface Mark {
+  topicId: number;
+  problemNo: number;
+  result: Result;
+  reason?: MistakeReason;
+}
+
+/** Save a practice session: write attempts and update each problem's review state. */
+export async function saveMarks(db: ExamDB, marks: Mark[], date: ISODate, isReview: boolean) {
+  if (!marks.length) return;
+  await db.transaction('rw', db.attempts, db.problemStates, async () => {
+    const now = Date.now();
+    const keys = marks.map((m) => problemKey(m.topicId, m.problemNo));
+    const prev = await db.problemStates.bulkGet(keys);
+    const next = marks.map((m, i) => applyAttempt(prev[i], { ...m, date }));
+    await db.attempts.bulkAdd(
+      marks.map((m, i) => ({
+        topicId: m.topicId,
+        problemNo: m.problemNo,
+        date,
+        result: m.result,
+        reason: m.result === 'wrong' ? m.reason : undefined,
+        isReview: isReview || prev[i] !== undefined,
+        createdAt: now + i,
+      })),
+    );
+    await db.problemStates.bulkPut(next);
+  });
+}
+
+/** Add the 5 default subjects once. Runs in a transaction so concurrent calls can't double-seed. */
+export async function seedIfEmpty(db: ExamDB) {
+  await db.transaction('rw', db.subjects, async () => {
+    if ((await db.subjects.count()) === 0) await db.subjects.bulkAdd(DEFAULT_SUBJECTS.map((s) => ({ ...s })));
+  });
+}
+
+export async function saveSettings(db: ExamDB, s: Settings) {
+  await db.settings.put(s);
+}
+
+/** Replace a subject's topic list. Topics matched by name keep their id (and history). */
+export async function replaceTopics(
+  db: ExamDB,
+  subjectId: number,
+  items: { name: string; problemCount: number }[],
+) {
+  await db.transaction('rw', [db.topics, db.attempts, db.problemStates, db.problemNotes], async () => {
+    const existing = await db.topics.where('subjectId').equals(subjectId).toArray();
+    const byName = new Map(existing.map((t) => [t.name, t]));
+    const keepIds = new Set<number>();
+    const rows: Topic[] = items.map((it, order) => {
+      const old = byName.get(it.name);
+      if (old) keepIds.add(old.id!);
+      return old
+        ? { ...old, order, problemCount: it.problemCount }
+        : { subjectId, name: it.name, order, problemCount: it.problemCount, summaryRead: false };
+    });
+    const removed = existing.filter((t) => !keepIds.has(t.id!)).map((t) => t.id!);
+    if (removed.length) {
+      await db.topics.bulkDelete(removed);
+      await db.attempts.where('topicId').anyOf(removed).delete();
+      await db.problemStates.where('topicId').anyOf(removed).delete();
+      await db.problemNotes.where('topicId').anyOf(removed).delete();
+    }
+    await db.topics.bulkPut(rows);
+  });
+}
+
+export async function rebuildAllStates(db: ExamDB) {
+  await db.transaction('rw', db.attempts, db.problemStates, async () => {
+    const map = rebuildStates(await db.attempts.toArray());
+    await db.problemStates.clear();
+    await db.problemStates.bulkPut([...map.values()]);
+  });
+}
+
+export async function saveNote(db: ExamDB, topicId: number, problemNo: number, text: string) {
+  const key = problemKey(topicId, problemNo);
+  if (text.trim()) await db.problemNotes.put({ key, topicId, text: text.trim(), updatedAt: Date.now() });
+  else await db.problemNotes.delete(key);
+}
+
+export async function startMock(db: ExamDB, items: MockItem[], limitSec: number, date: ISODate) {
+  return db.mockSets.add({ date, status: 'active', startedAt: Date.now(), limitSec, items });
+}
+
+/** Stop the clock (finished early or time ran out). Grading happens after. */
+export async function stopMock(db: ExamDB, id: number, at = Date.now()) {
+  await db.transaction('rw', db.mockSets, async () => {
+    const m = await db.mockSets.get(id);
+    if (m && !m.stoppedAt) await db.mockSets.update(id, { stoppedAt: Math.min(at, m.startedAt + m.limitSec * 1000) });
+  });
+}
+
+/** Save grading: results go on the set, and each answer is logged like normal practice. */
+export async function finishMock(db: ExamDB, id: number, results: MockResult[], date: ISODate) {
+  const m = await db.mockSets.get(id);
+  if (!m) return;
+  await saveMarks(db, m.items.map((it, i) => ({ topicId: it.topicId, problemNo: it.problemNo, ...results[i] })), date, false);
+  await db.mockSets.update(id, { status: 'done', results, stoppedAt: m.stoppedAt ?? Date.now() });
+}

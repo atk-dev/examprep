@@ -1,7 +1,8 @@
 import { AlarmClock, Timer } from 'lucide-react';
-import { ICON, PageTitle } from '../components/ui';
+import { CardTitle, ICON, PageTitle, Segmented } from '../components/ui';
+import { mockTotal } from '../plan/progress';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { db } from '../db/db';
 import { finishMock, startMock, stopMock } from '../db/actions';
 import { BarList, ScoreTrend } from '../components/charts';
@@ -16,12 +17,174 @@ const SIZES = [10, 20, 30, 50];
 const PACES = [1, 1.5, 2];
 
 export default function Mock({ data }: { data: AppData }) {
+  const [params, setParams] = useSearchParams();
   const active = data.mockSets.find((m) => m.status === 'active');
   if (active) return active.stoppedAt || remainingSec(active, Date.now()) === 0 ? <Grade data={data} set={active} /> : <Running data={data} set={active} />;
-  return <Builder data={data} />;
+  if (!data.planMode) return <Builder data={data} />;
+  const tab = params.get('tab') === 'practice' ? 'practice' : 'exam';
+  return (
+    <>
+      <PageTitle icon={Timer}>สอบจำลอง</PageTitle>
+      <Segmented
+        label="มุมมอง"
+        value={tab}
+        onChange={(t) => setParams({ tab: t }, { replace: true })}
+        options={[{ id: 'exam', label: `สอบจำลอง ${data.plan!.mocks.length} ครั้ง` }, { id: 'practice', label: 'ฝึกจับเวลา' }]}
+      />
+      {tab === 'exam' ? <MockExams data={data} /> : <Builder data={data} hideTitle />}
+    </>
+  );
 }
 
-function Builder({ data }: { data: AppData }) {
+/** The plan's mock exams: guided timer in real exam order + score per subject. */
+function MockExams({ data }: { data: AppData }) {
+  const plan = data.plan!;
+  const today = todayISO();
+  const sessions = plan.exam.sessions;
+  const total = plan.exam.totalScore ?? sessions.reduce((n, x) => n + x.questions, 0);
+  const target = data.settings?.profile?.targetScore ?? null;
+  const defaultN = (plan.mocks.find((m) => m.date >= today) ?? plan.mocks[plan.mocks.length - 1]).n;
+  const [n, setN] = useState(defaultN);
+  const mock = plan.mocks.find((m) => m.n === n)!;
+  const rec = data.mockExams.find((m) => m.n === n);
+  const [scores, setScores] = useState<Record<string, string>>({});
+  const [minutes, setMinutes] = useState('');
+  const [focus, setFocus] = useState('');
+  const [saved, setSaved] = useState(false);
+  const now = useNow();
+  useEffect(() => {
+    setScores(Object.fromEntries(sessions.map((x) => [x.subject, rec?.scores[x.subject] != null ? String(rec.scores[x.subject]) : ''])));
+    setMinutes(rec?.minutes ? String(rec.minutes) : '');
+    setFocus(rec?.focus ?? '');
+    setSaved(false);
+    // Reload the form only when switching rounds: saving creates/updates `rec`, and reacting to
+    // that would wipe the "saved" confirmation. Data is already loaded when this page renders.
+  }, [n]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const name = (k: string) => data.subjectByKey.get(k)?.name ?? k;
+  // 1.1: question sets this mock can run in the app, one per subject.
+  const inApp = new Map<string, { topicId: number; correct: number; answered: number }>();
+  for (const id of mock.sets ?? []) {
+    const set = plan.sets.find((x) => x.id === id);
+    const topic = data.topicByKey.get(id);
+    if (!set || !topic || !data.questionsByTopic.has(topic.id!)) continue;
+    const states = [...(data.statesByTopic.get(topic.id!)?.values() ?? [])];
+    inApp.set(set.subject, { topicId: topic.id!, answered: states.length, correct: states.filter((x) => x.firstResult === 'correct').length });
+  }
+  const sum = sessions.reduce((acc, x) => acc + (Number(scores[x.subject]) || 0), 0);
+  const invalid = sessions.some((x) => scores[x.subject] !== '' && scores[x.subject] !== undefined && (Number(scores[x.subject]) < 0 || Number(scores[x.subject]) > x.questions));
+
+  async function save() {
+    const parsed = Object.fromEntries(sessions.map((x) => [x.subject, scores[x.subject] === '' ? null : Math.round(Number(scores[x.subject]))]));
+    await db.mockExams.put({ ...rec, n, date: mock.date, scores: parsed, minutes: minutes ? Math.round(Number(minutes)) : null, focus: focus || undefined });
+    setSaved(true);
+  }
+
+  // Guided timer: subjects back to back in the real exam order.
+  const startedAt = rec?.timerStartedAt;
+  let timer: { subject: string; left: number; i: number } | null = null;
+  if (startedAt) {
+    let t = Math.floor((now - startedAt) / 1000);
+    for (const [i, x] of sessions.entries()) {
+      if (t < x.minutes * 60) { timer = { subject: x.subject, left: x.minutes * 60 - t, i }; break; }
+      t -= x.minutes * 60;
+    }
+  }
+  const startTimer = () => db.mockExams.put({ ...(rec ?? { n, date: mock.date, scores: {} }), timerStartedAt: Date.now() });
+  const stopTimer = () => rec && db.mockExams.put({ ...rec, timerStartedAt: undefined });
+
+  return (
+    <>
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" role="group" aria-label="เลือกครั้ง">
+        {plan.mocks.map((m) => {
+          const t = mockTotal(data.mockExams.find((x) => x.n === m.n));
+          return (
+            <button key={m.n} className="chip" aria-pressed={n === m.n} onClick={() => setN(m.n)}>
+              ครั้งที่ {m.n}{t ? ` · ${t}` : ''}
+            </button>
+          );
+        })}
+      </div>
+
+      <section className="card space-y-3">
+        <CardTitle>ครั้งที่ {n} · {formatThai(mock.date)}</CardTitle>
+        {mock.note && <p className="text-sm text-muted-fg">{mock.note}</p>}
+        <ol className="space-y-1 text-sm">
+          {sessions.map((x, i) => (
+            <li key={x.subject} className={`flex justify-between rounded-xl px-2 py-1 ${timer?.i === i ? 'bg-primary/10 font-bold' : ''}`}>
+              <span>{x.start ?? ''} {name(x.subject)}</span><span>{x.questions} ข้อ · {x.minutes} นาที</span>
+            </li>
+          ))}
+        </ol>
+        {timer ? (
+          <div className="rounded-2xl bg-primary p-3 text-center text-white" role="timer" aria-label={`${name(timer.subject)} เหลือ ${formatClock(timer.left)}`}>
+            <p className="text-sm">{name(timer.subject)} · วิชาที่ {timer.i + 1}/{sessions.length}</p>
+            <p className="font-display text-4xl font-bold tabular-nums">{formatClock(timer.left)}</p>
+            <button className="btn-ghost mt-2" onClick={stopTimer}>หยุดจับเวลา</button>
+          </div>
+        ) : startedAt ? (
+          <p className="text-sm font-semibold text-success">ครบทุกวิชาแล้ว · กรอกคะแนนด้านล่าง</p>
+        ) : (
+          <button className="btn-primary w-full" onClick={startTimer}><AlarmClock size={ICON.md} aria-hidden /> จับเวลาตามตารางสอบจริง</button>
+        )}
+      </section>
+
+      {inApp.size > 0 && (
+        <section className="card space-y-2">
+          <CardTitle>ทำข้อสอบชุดนี้ในแอป</CardTitle>
+          <ul className="space-y-2">
+            {sessions.filter((x) => inApp.has(x.subject)).map((x) => {
+              const a = inApp.get(x.subject)!;
+              return (
+                <li key={x.subject} className="flex flex-wrap items-center gap-2">
+                  <span className="min-w-0 flex-1 text-sm font-semibold">{name(x.subject)} <span className="font-normal text-muted-fg">· ทำแล้ว {a.answered} ข้อ</span></span>
+                  <Link to={`/log?topic=${a.topicId}&minutes=${x.minutes}`} className="btn-primary text-sm">ทำในแอป</Link>
+                  {a.answered > 0 && (
+                    <button className="btn-ghost text-sm" onClick={() => { setScores((cur) => ({ ...cur, [x.subject]: String(a.correct) })); setSaved(false); }}>
+                      ใช้คะแนน {a.correct}
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
+      <section className="card space-y-3">
+        <CardTitle>คะแนน</CardTitle>
+        <div className="grid grid-cols-2 gap-3">
+          {sessions.map((x) => (
+            <div key={x.subject}>
+              <label className="label" htmlFor={`ms-${x.subject}`}>{name(x.subject)} (เต็ม {x.questions})</label>
+              <input id={`ms-${x.subject}`} className="input text-center" type="number" inputMode="numeric" min={0} max={x.questions}
+                value={scores[x.subject] ?? ''} onChange={(e) => { setScores({ ...scores, [x.subject]: e.target.value }); setSaved(false); }} />
+            </div>
+          ))}
+          <div>
+            <label className="label" htmlFor="ms-min">เวลาที่ใช้ (นาที)</label>
+            <input id="ms-min" className="input text-center" type="number" inputMode="numeric" min={0} value={minutes} onChange={(e) => { setMinutes(e.target.value); setSaved(false); }} />
+          </div>
+        </div>
+        <div>
+          <label className="label" htmlFor="ms-focus">วิชาที่ต้องเน้นสัปดาห์หน้า</label>
+          <select id="ms-focus" className="input" value={focus} onChange={(e) => { setFocus(e.target.value); setSaved(false); }}>
+            <option value="">— เลือก —</option>
+            {sessions.map((x) => <option key={x.subject} value={x.subject}>{name(x.subject)}</option>)}
+          </select>
+        </div>
+        <p className="text-center">รวม <b className="font-display text-3xl">{sum}</b> / {total}
+          {target ? <span className={`block text-sm ${sum >= target ? 'text-success' : 'text-muted-fg'}`}>เป้าหมาย {target}{sum >= target ? ' · ถึงเป้าแล้ว!' : ` · ขาดอีก ${target - sum}`}</span> : null}
+        </p>
+        {invalid && <p className="text-sm font-semibold text-danger" role="alert">คะแนนต้องอยู่ระหว่าง 0 ถึงคะแนนเต็มของวิชา</p>}
+        <button className="btn-cta w-full py-3 text-base" disabled={invalid} onClick={save}>{saved ? 'บันทึกแล้ว ✓' : 'บันทึกคะแนน'}</button>
+      </section>
+      <Link to="/progress?tab=scores" className="btn-ghost w-full">ดูคะแนนทุกครั้ง</Link>
+    </>
+  );
+}
+
+function Builder({ data, hideTitle = false }: { data: AppData; hideTitle?: boolean }) {
   const s = data.settings!;
   const withTopics = data.subjects.filter((sub) => data.topics.some((t) => t.subjectId === sub.id));
   const [picked, setPicked] = useState<number[]>(withTopics.map((x) => x.id!));
@@ -40,7 +203,7 @@ function Builder({ data }: { data: AppData }) {
 
   return (
     <>
-      <PageTitle icon={Timer}>ฝึกจับเวลา</PageTitle>
+      {!hideTitle && <PageTitle icon={Timer}>ฝึกจับเวลา</PageTitle>}
       <p className="text-sm text-muted-fg">
         สุ่มโจทย์คละวิชาจากหนังสือ เน้นข้อที่เคยผิดและหัวข้อที่ยังอ่อน ทำในกระดาษแบบไม่ดูเฉลย แล้วกลับมาตรวจ
       </p>

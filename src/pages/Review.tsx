@@ -59,7 +59,7 @@ export default function Review({ data }: { data: AppData }) {
   const card = (s: ProblemState) => {
     const t = topicById.get(s.topicId);
     const sub = t && subjectById.get(t.subjectId);
-    return t && sub ? <ProblemCard key={s.key} state={s} topic={t} subject={sub} note={data.notes.get(s.key)} /> : null;
+    return t && sub ? <ProblemCard key={s.key} state={s} topic={t} subject={sub} note={data.notes.get(s.key)} question={data.questionsByTopic.get(t.id!)?.get(s.problemNo)} /> : null;
   };
 
   return (

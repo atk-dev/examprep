@@ -7,7 +7,8 @@ import { MISTAKE_LABELS } from '../logic/stats';
 import type { AppData } from '../hooks/useAppData';
 import type { MistakeReason, ProblemState, Result } from '../types';
 import { BookOpen, CheckCheck, PencilLine } from 'lucide-react';
-import { CardTitle, ICON, PageTitle, Toast } from '../components/ui';
+import { CardTitle, ICON, PageTitle, Segmented, Toast } from '../components/ui';
+import Quiz from '../components/Quiz';
 
 // Already-attempted problems: tint + ring + a small glyph, so status isn't shown by color alone.
 const STATUS_LOOK: Record<ProblemState['status'], { cls: string; glyph: string; label: string }> = {
@@ -25,6 +26,8 @@ export default function Log({ data }: { data: AppData }) {
   const [marks, setMarks] = useState<Map<number, { result: Result; reason?: MistakeReason }>>(new Map());
   const [rangeTo, setRangeTo] = useState('');
   const [toast, setToast] = useState('');
+  const [mode, setMode] = useState<'quiz' | 'grid'>('quiz');
+  const [restart, setRestart] = useState(0);
 
   useEffect(() => {
     if (topic) setSubjectId(topic.subjectId);
@@ -33,6 +36,20 @@ export default function Log({ data }: { data: AppData }) {
   }, [topicId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const states = (topicId && data.statesByTopic.get(topicId)) || new Map<number, ProblemState>();
+  const questions = topicId ? data.questionsByTopic.get(topicId) : undefined;
+  const from = Number(params.get('from')) || 1;
+  const to = Number(params.get('to')) || topic?.problemCount || 0;
+  const minutes = Number(params.get('minutes')) || null;
+  const reviewMode = params.get('review') === '1';
+  const inRange = questions ? [...questions.keys()].filter((n) => n >= from && n <= to).sort((a, b) => a - b) : [];
+  // Decide which questions to ask once per quiz start; answering changes `states`, and the
+  // quiz (and its results screen) must not be swapped out underneath the student.
+  const quizKey = `${topicId}-${from}-${to}-${restart}-${reviewMode}-${questions?.size ?? 0}`;
+  const quizNos = useMemo(
+    () => (reviewMode || restart ? inRange : inRange.filter((n) => !states.has(n))),
+    [quizKey], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  const showQuiz = inRange.length > 0 && mode === 'quiz';
   const subjectTopics = data.topics.filter((t) => t.subjectId === subjectId);
   const startAt = topicId ? data.firstUntried(topicId) : 1;
 
@@ -132,96 +149,131 @@ export default function Log({ data }: { data: AppData }) {
             <span className="font-semibold">อ่านสรุปหัวข้อนี้แล้ว</span>
           </label>
 
-          <div className="card space-y-3">
-            <div className="flex items-baseline justify-between gap-2">
-              <CardTitle>{topic.name}</CardTitle>
-              <span className="shrink-0 text-sm text-muted-fg">ทำแล้ว {tp?.done ?? 0}/{topic.problemCount}</span>
-            </div>
-            <p className="rounded-2xl bg-primary/10 p-2.5 text-sm text-fg">
-              แตะเลขข้อ <b>1 ครั้ง = ถูก ✓</b> · <b>2 ครั้ง = ผิด ✗</b> · 3 ครั้ง = ยกเลิก
-            </p>
-            <div className="flex flex-wrap items-center gap-2 text-sm">
-              <label htmlFor="range-to" className="shrink-0">ถูกหมดตั้งแต่ข้อ {startAt} ถึง</label>
-              <input
-                id="range-to"
-                type="number"
-                inputMode="numeric"
-                className="input w-20 text-center"
-                min={startAt}
-                max={topic.problemCount}
-                value={rangeTo}
-                onChange={(e) => setRangeTo(e.target.value)}
+          {inRange.length > 0 && (
+            <Segmented
+              label="วิธีทำโจทย์"
+              value={mode}
+              onChange={setMode}
+              options={[{ id: 'quiz', label: 'ทำในแอป' }, { id: 'grid', label: 'บันทึกจากหนังสือ' }]}
+            />
+          )}
+          {(params.get("from") || params.get("to")) && (
+            <p className="text-sm text-muted-fg">ข้อ {from}–{to}{minutes ? ` · จับเวลา ${minutes} นาที` : ''}</p>
+          )}
+          {showQuiz ? (
+            quizNos.length ? (
+              <Quiz
+                key={quizKey}
+                topic={topic}
+                subject={data.subjects.find((x) => x.id === topic.subjectId)}
+                nos={quizNos}
+                questions={questions!}
+                passages={data.passageById}
+                states={states}
+                notes={data.noteRows}
+                minutes={minutes}
               />
-              <button className="btn-ghost" onClick={markRangeCorrect} disabled={!rangeTo}>
-                <CheckCheck size={ICON.md} aria-hidden /> ทั้งช่วง
+            ) : (
+              <section className="card space-y-3 text-center">
+                <CardTitle className="justify-center">ทำครบช่วงนี้แล้ว ✓</CardTitle>
+                <p className="text-sm text-muted-fg">ข้อที่ผิดจะกลับมาให้ทวนตามกำหนด</p>
+                <button className="btn-ghost w-full" onClick={() => setRestart((n) => n + 1)}>ทำใหม่ทั้งช่วง (นับเป็นการทวน)</button>
+              </section>
+            )
+          ) : (
+            <>
+          <div className="card space-y-3">
+              <div className="flex items-baseline justify-between gap-2">
+                <CardTitle>{topic.name}</CardTitle>
+                <span className="shrink-0 text-sm text-muted-fg">ทำแล้ว {tp?.done ?? 0}/{topic.problemCount}</span>
+              </div>
+              <p className="rounded-2xl bg-primary/10 p-2.5 text-sm text-fg">
+                แตะเลขข้อ <b>1 ครั้ง = ถูก ✓</b> · <b>2 ครั้ง = ผิด ✗</b> · 3 ครั้ง = ยกเลิก
+              </p>
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <label htmlFor="range-to" className="shrink-0">ถูกหมดตั้งแต่ข้อ {startAt} ถึง</label>
+                <input
+                  id="range-to"
+                  type="number"
+                  inputMode="numeric"
+                  className="input w-20 text-center"
+                  min={startAt}
+                  max={topic.problemCount}
+                  value={rangeTo}
+                  onChange={(e) => setRangeTo(e.target.value)}
+                />
+                <button className="btn-ghost" onClick={markRangeCorrect} disabled={!rangeTo}>
+                  <CheckCheck size={ICON.md} aria-hidden /> ทั้งช่วง
+                </button>
+              </div>
+              <div className="grid grid-cols-6 gap-2 sm:grid-cols-10">
+                {Array.from({ length: topic.problemCount }, (_, i) => i + 1).map((n) => {
+                  const m = marks.get(n);
+                  const st = states.get(n);
+                  const look = st ? STATUS_LOOK[st.status] : null;
+                  const cls = m
+                    ? m.result === 'correct'
+                      ? 'bg-success text-white shadow-[0_3px_0_0_#065f46]'
+                      : 'bg-danger text-white shadow-[0_3px_0_0_#7f1d1d]'
+                    : look
+                      ? `ring-2 ring-inset ${look.cls}`
+                      : 'bg-muted text-fg shadow-[0_3px_0_0_var(--color-border)]';
+                  const state = m ? (m.result === 'correct' ? 'เลือก ถูก' : 'เลือก ผิด') : look ? look.label : 'ยังไม่ทำ';
+                  return (
+                    <button
+                      key={n}
+                      onClick={() => cycle(n)}
+                      className={`relative aspect-square min-h-11 rounded-xl text-base font-bold transition-[transform,background-color] duration-100 active:scale-90 ${cls}`}
+                      aria-label={`ข้อ ${n}, ${state}`}
+                    >
+                      {m ? (m.result === 'correct' ? '✓' : '✗') : n}
+                      {!m && look && (
+                        <span aria-hidden className="absolute right-1 bottom-0.5 text-xs leading-none">{look.glyph}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-fg" aria-label="ความหมายของสี">
+                {(['done', 'wrong', 'reviewing'] as const).map((k) => (
+                  <li key={k} className="flex items-center gap-1.5">
+                    <span aria-hidden className={`grid h-5 w-5 place-items-center rounded-md ring-2 ring-inset text-xs ${STATUS_LOOK[k].cls}`}>{STATUS_LOOK[k].glyph}</span>
+                    {STATUS_LOOK[k].label}
+                  </li>
+                ))}
+              </ul>
+            </div>
+  
+            {wrongMarks.length > 0 && (
+              <div className="card space-y-3">
+                <CardTitle>ผิดเพราะอะไร?</CardTitle>
+                {wrongMarks.map(([n, m]) => (
+                  <div key={n}>
+                    <div className="mb-1 text-sm font-semibold" id={`why-${n}`}>ข้อ {n}</div>
+                    <div className="flex flex-wrap gap-2" role="group" aria-labelledby={`why-${n}`}>
+                      {(Object.keys(MISTAKE_LABELS) as MistakeReason[]).map((r) => (
+                        <button
+                          key={r}
+                          onClick={() => setReason(n, r)}
+                          className="chip"
+                          aria-pressed={m.reason === r}
+                        >
+                          {MISTAKE_LABELS[r]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+  
+            <div className="sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-10">
+              <button className="btn-cta w-full py-3 text-base" disabled={!marks.size} onClick={save}>
+                บันทึก {marks.size || ''} ข้อ
               </button>
             </div>
-            <div className="grid grid-cols-6 gap-2 sm:grid-cols-10">
-              {Array.from({ length: topic.problemCount }, (_, i) => i + 1).map((n) => {
-                const m = marks.get(n);
-                const st = states.get(n);
-                const look = st ? STATUS_LOOK[st.status] : null;
-                const cls = m
-                  ? m.result === 'correct'
-                    ? 'bg-success text-white shadow-[0_3px_0_0_#065f46]'
-                    : 'bg-danger text-white shadow-[0_3px_0_0_#7f1d1d]'
-                  : look
-                    ? `ring-2 ring-inset ${look.cls}`
-                    : 'bg-muted text-fg shadow-[0_3px_0_0_var(--color-border)]';
-                const state = m ? (m.result === 'correct' ? 'เลือก ถูก' : 'เลือก ผิด') : look ? look.label : 'ยังไม่ทำ';
-                return (
-                  <button
-                    key={n}
-                    onClick={() => cycle(n)}
-                    className={`relative aspect-square min-h-11 rounded-xl text-base font-bold transition-[transform,background-color] duration-100 active:scale-90 ${cls}`}
-                    aria-label={`ข้อ ${n}, ${state}`}
-                  >
-                    {m ? (m.result === 'correct' ? '✓' : '✗') : n}
-                    {!m && look && (
-                      <span aria-hidden className="absolute right-1 bottom-0.5 text-xs leading-none">{look.glyph}</span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-fg" aria-label="ความหมายของสี">
-              {(['done', 'wrong', 'reviewing'] as const).map((k) => (
-                <li key={k} className="flex items-center gap-1.5">
-                  <span aria-hidden className={`grid h-5 w-5 place-items-center rounded-md ring-2 ring-inset text-xs ${STATUS_LOOK[k].cls}`}>{STATUS_LOOK[k].glyph}</span>
-                  {STATUS_LOOK[k].label}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {wrongMarks.length > 0 && (
-            <div className="card space-y-3">
-              <CardTitle>ผิดเพราะอะไร?</CardTitle>
-              {wrongMarks.map(([n, m]) => (
-                <div key={n}>
-                  <div className="mb-1 text-sm font-semibold" id={`why-${n}`}>ข้อ {n}</div>
-                  <div className="flex flex-wrap gap-2" role="group" aria-labelledby={`why-${n}`}>
-                    {(Object.keys(MISTAKE_LABELS) as MistakeReason[]).map((r) => (
-                      <button
-                        key={r}
-                        onClick={() => setReason(n, r)}
-                        className="chip"
-                        aria-pressed={m.reason === r}
-                      >
-                        {MISTAKE_LABELS[r]}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+            </>
           )}
-
-          <div className="sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-10">
-            <button className="btn-cta w-full py-3 text-base" disabled={!marks.size} onClick={save}>
-              บันทึก {marks.size || ''} ข้อ
-            </button>
-          </div>
         </>
       )}
 

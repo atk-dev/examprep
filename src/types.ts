@@ -20,10 +20,25 @@ export interface Settings {
   reminderTime?: string;
   /** Last time a backup was exported (ms). */
   lastBackupAt?: number;
+  /** 'plan' = an imported study plan drives Today; 'auto' (default) = daily quota. */
+  planMode?: 'auto' | 'plan';
+  /** Phase names/goals from an imported plan (replaces the built-in labels). */
+  phaseLabels?: { name: string; goal?: string }[];
+  profile?: Profile;
+}
+
+export interface Profile {
+  studentName?: string;
+  teacherName?: string;
+  school?: string;
+  /** Target total score in the real exam (e.g. out of 200). */
+  targetScore?: number | null;
 }
 
 export interface Subject {
   id?: number;
+  /** Stable id from an imported plan/bank (math, thai, science, english, social). */
+  key?: string;
   name: string;
   color: string;
   order: number;
@@ -32,6 +47,9 @@ export interface Subject {
 export interface Topic {
   id?: number;
   subjectId: number;
+  /** Stable set id from an imported plan/bank (e.g. prep-math-04, pretest-math-1). */
+  key?: string;
+  kind?: 'chapter' | 'pretest' | 'mock' | 'extra';
   name: string;
   order: number;
   problemCount: number;
@@ -87,6 +105,8 @@ export interface ProblemNote {
   topicId: number;
   text: string;
   updatedAt: number;
+  /** Flagged to ask the teacher on Saturday. */
+  askTeacher?: boolean;
 }
 
 export interface MockItem {
@@ -111,4 +131,66 @@ export interface MockSet {
   stoppedAt?: number;
   items: MockItem[];
   results?: MockResult[];
+}
+
+/** A plan task marked done by hand (tasks with a problem range also complete automatically). */
+export interface TaskDone {
+  taskId: string;
+  doneAt: number;
+}
+
+/** One of the plan's mock exams (สอบจำลอง): score per subject key. */
+export interface MockExam {
+  n: number;
+  date: ISODate;
+  scores: Record<string, number | null>;
+  minutes?: number | null;
+  focus?: string;
+  /** Guided timer start (ms), if the student used it. */
+  timerStartedAt?: number;
+}
+
+/** A question from an imported bank. Linked to a topic through `setKey` = Topic.key. */
+export interface Question {
+  key: string; // `${setKey}:${no}`
+  setKey: string;
+  no: number;
+  type: 'choice' | 'multi' | 'short' | 'open';
+  text: string;
+  choices?: (string | { text?: string; image?: string })[];
+  answer: number | number[] | string | null;
+  /** 'rich' = **bold**, __underline__, *italic*, $LaTeX$ */
+  format?: 'plain' | 'rich';
+  points?: number;
+  tags?: string[];
+  /** Where to find it in the book, e.g. "เตรียมสอบ ป.6 · หน้า 336". */
+  source?: string;
+  audio?: string;
+  solution?: string;
+  topic?: string;
+  passageId?: string;
+  image?: string;
+  needsReview?: boolean;
+  reviewNote?: string;
+}
+
+export interface Passage {
+  id: string;
+  text: string;
+  image?: string;
+  audio?: string;
+  format?: 'plain' | 'rich';
+}
+
+/** Image or audio bytes from a question bank (kept as ArrayBuffer; used through an object URL). */
+export interface Figure {
+  id: string; // path inside the bank zip, e.g. figures/prep-math-04-012.png or audio/eng-01.mp3
+  mime: string;
+  data: ArrayBuffer;
+}
+
+export interface PlanMeta {
+  id: 'main';
+  importedAt: number;
+  plan: import('./plan/planSchema').PlanFile;
 }

@@ -21,12 +21,14 @@ export function defaultPhases(examDate: ISODate) {
 }
 
 export function phases(s: Settings): PhaseInfo[] {
-  return [
+  const base: PhaseInfo[] = [
     { id: 'phase1', name: 'รอบแรก: ทำโจทย์ให้ครบ', goal: 'อ่านสรุปแล้วทำโจทย์ทุกข้อในหัวข้อ', start: s.startDate, end: s.phase1End },
     { id: 'phase2', name: 'แก้จุดอ่อน', goal: 'ทวนข้อที่ผิดและหัวข้อที่ทำได้น้อย', start: addDaysISO(s.phase1End, 1), end: s.phase2End },
     { id: 'phase3', name: 'ฝึกจับเวลา', goal: 'ทำโจทย์คละวิชาแบบจับเวลา', start: addDaysISO(s.phase2End, 1), end: s.phase3End },
     { id: 'final', name: 'สัปดาห์สุดท้าย', goal: 'ทวนสมุดข้อผิดเบาๆ พักผ่อนให้พอ', start: addDaysISO(s.phase3End, 1), end: addDaysISO(s.examDate, -1) },
   ];
+  // An imported plan names its own phases.
+  return base.map((p, i) => (s.phaseLabels?.[i] ? { ...p, name: s.phaseLabels[i].name, goal: s.phaseLabels[i].goal ?? '' } : p));
 }
 
 export function currentPhase(s: Settings, today: ISODate): PhaseInfo | null {

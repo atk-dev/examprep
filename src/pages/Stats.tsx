@@ -2,6 +2,7 @@ import { BarList, CalendarHeatmap, PlanChart } from '../components/charts';
 import { pct } from '../components/ui';
 import { addDaysISO, todayISO } from '../logic/dates';
 import { dailyCounts, planGap, planVsActual, weakTopics } from '../logic/insights';
+import { planCurve, taskGap } from '../plan/progress';
 import { MISTAKE_LABELS, mistakeBreakdown, streak } from '../logic/stats';
 import type { AppData } from '../hooks/useAppData';
 import type { MistakeReason } from '../types';
@@ -22,7 +23,8 @@ export default function Stats({ data }: { data: AppData }) {
   const counts = dailyCounts(data.attempts);
   const firstCorrect = data.states.filter((x) => x.firstResult === 'correct').length;
   const minutes = data.dailyLogs.reduce((n, l) => n + l.minutes, 0);
-  const gap = planGap(s, today, data.states, data.total);
+  const gap = data.planMode ? taskGap(data.tasks, today, data.taskCtx).gap : planGap(s, today, data.states, data.total);
+  const unit = data.planMode ? 'งาน' : 'ข้อ';
   const mistakes = mistakeBreakdown(data.attempts);
   const weak = weakTopics(data.progress);
   const firstDay = data.attempts.reduce((m, a) => (a.date < m ? a.date : m), s.startDate);
@@ -32,14 +34,14 @@ export default function Stats({ data }: { data: AppData }) {
       <div className="grid grid-cols-2 gap-3">
         <Tile label="ทำแล้ว" value={`${data.done}`} sub={`จาก ${data.total} ข้อ`} />
         <Tile label="ถูกครั้งแรก" value={pct(data.done ? firstCorrect / data.done : null)} sub="ไม่นับการทวน" />
-        <Tile label="เทียบแผน" value={gap >= 0 ? `+${gap}` : `${gap}`} sub={gap >= 0 ? 'ข้อ นำแผน' : 'ข้อ ช้ากว่าแผน'} />
+        <Tile label="เทียบแผน" value={gap >= 0 ? `+${gap}` : `${gap}`} sub={gap >= 0 ? `${unit} นำแผน` : `${unit} ช้ากว่าแผน`} />
         <Tile label="ต่อเนื่อง" value={`${streak(data.attempts, today)} วัน`} sub={`เรียนรวม ${Math.round(minutes / 60)} ชม.`} />
       </div>
 
       <section className="card">
         <h2 className="text-lg font-bold">ความคืบหน้าเทียบแผน</h2>
         <p className="mb-2 text-xs text-muted-fg">จำนวนข้อสะสม (รอบแรก)</p>
-        <PlanChart points={planVsActual(s, data.states, data.total, today)} today={today} />
+        <PlanChart points={data.planMode ? planCurve(data.tasks, data.states, today) : planVsActual(s, data.states, data.total, today)} today={today} />
       </section>
 
       <section className="card">

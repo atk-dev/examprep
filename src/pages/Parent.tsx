@@ -7,6 +7,8 @@ import { ProgressBar, pct } from '../components/ui';
 import { Tile } from './Stats';
 import { formatThai, todayISO } from '../logic/dates';
 import { planGap, reportText, weakTopics, weekSummary } from '../logic/insights';
+import { mockTotal, taskGap, taskStatus } from '../plan/progress';
+import { addDaysISO } from '../logic/dates';
 import { currentPhase, daysUntilExam } from '../logic/plan';
 import { reportImage } from '../logic/reportImage';
 import { MISTAKE_LABELS } from '../logic/stats';
@@ -68,11 +70,27 @@ export default function Parent({ data }: { data: AppData }) {
 
   const today = todayISO();
   const week = weekSummary(data.attempts, data.states, data.dailyLogs, today);
-  const gap = planGap(s, today, data.states, data.total);
+  const tg = data.planMode ? taskGap(data.tasks, today, data.taskCtx) : null;
+  const gap = tg ? tg.gap : planGap(s, today, data.states, data.total);
+  const unit = tg ? 'งาน' : 'ข้อ';
+  const weekTasks = data.tasks.filter((t) => t.date >= addDaysISO(today, -6) && t.date <= today && t.type !== 'exam' && t.type !== 'kickoff');
+  const weekDone = weekTasks.filter((t) => taskStatus(t, data.taskCtx).done).length;
+  const lastMock = [...data.mockExams].reverse().find((m) => mockTotal(m));
+  const totalScore = data.plan?.exam.totalScore ?? 200;
+  const planExtra = tg
+    ? [
+        `🗓️ งานตามแผนสัปดาห์นี้ ${weekDone}/${weekTasks.length}${tg.missed ? ` · ค้างทั้งหมด ${tg.missed} งาน` : ''}`,
+        ...(lastMock ? [`📝 สอบจำลองครั้งที่ ${lastMock.n}: ${mockTotal(lastMock)}/${totalScore}${s.profile?.targetScore ? ` (เป้า ${s.profile.targetScore})` : ''}`] : []),
+      ]
+    : undefined;
   const phase = currentPhase(s, today);
   const weak = weakTopics(data.progress, 5, 3);
   const onTrack = gap >= 0;
-  const text = reportText({ settings: s, today, week, progress: data.progress, states: data.states, done: data.done, total: data.total, attempts: data.attempts });
+  const text = reportText({
+    settings: s, today, week, progress: data.progress, states: data.states, done: data.done, total: data.total, attempts: data.attempts,
+    planStatus: tg ? (tg.gap >= 0 ? '✅ ทำตามแผนครบ' : `⚠️ ค้าง ${tg.missed} งาน`) : undefined,
+    extra: planExtra,
+  });
 
   const flash = (m: string) => {
     setMsg(m);
@@ -122,7 +140,7 @@ export default function Parent({ data }: { data: AppData }) {
           {onTrack ? 'เป็นไปตามแผน' : 'ช้ากว่าแผน'}
         </div>
         <div className="text-sm">
-          {onTrack ? `นำแผน ${gap} ข้อ` : `ต้องเร่งอีก ${-gap} ข้อ`} · อีก {Math.max(daysUntilExam(s, today), 0)} วันสอบ ({formatThai(s.examDate)})
+          {onTrack ? (gap > 0 ? `นำแผน ${gap} ${unit}` : 'ทำครบตามแผน') : tg ? `ค้าง ${tg.missed} งาน` : `ต้องเร่งอีก ${-gap} ข้อ`} · อีก {Math.max(daysUntilExam(s, today), 0)} วันสอบ ({formatThai(s.examDate)})
           {phase && <> · ช่วง{phase.name}</>}
         </div>
       </section>

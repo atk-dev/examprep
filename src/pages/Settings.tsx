@@ -1,9 +1,10 @@
 import { CalendarPlus, Download, Settings as SettingsIcon, Trash2, Upload } from 'lucide-react';
 import { ICON, PageTitle, Toast } from '../components/ui';
+import { BankImport, PlanImport } from '../components/ImportPanels';
 import { useRef, useState } from 'react';
 import { db } from '../db/db';
 import { saveSettings } from '../db/actions';
-import { exportBackup, importBackup, parseBackup } from '../db/backup';
+import { exportBackupZip, importBackup, readBackupFile } from '../db/backup';
 import { TH_WEEKDAYS, todayISO } from '../logic/dates';
 import { defaultPhases } from '../logic/plan';
 import { reminderICS } from '../logic/reminders';
@@ -36,8 +37,8 @@ export default function SettingsPage({ data }: { data: AppData }) {
   }
 
   async function doExport() {
-    const b = await exportBackup(db);
-    download(new Blob([JSON.stringify(b)], { type: 'application/json' }), `examprep-backup-${todayISO()}.json`);
+    const zip = await exportBackupZip(db);
+    download(new Blob([zip.slice().buffer as ArrayBuffer], { type: 'application/zip' }), `examprep-backup-${todayISO()}.zip`);
     await db.settings.update('main', { lastBackupAt: Date.now() });
   }
 
@@ -51,9 +52,9 @@ export default function SettingsPage({ data }: { data: AppData }) {
 
   async function doImport(file: File) {
     try {
-      const b = parseBackup(await file.text());
+      const { backup: b, figures } = readBackupFile(new Uint8Array(await file.arrayBuffer()));
       if (!confirm('ข้อมูลปัจจุบันจะถูกแทนที่ด้วยไฟล์สำรอง ดำเนินการต่อ?')) return;
-      await importBackup(db, b);
+      await importBackup(db, b, figures);
       if (b.data.settings[0]) setS(b.data.settings[0] as Settings);
       flash('นำเข้าข้อมูลแล้ว ✓');
     } catch (e) {
@@ -79,21 +80,81 @@ export default function SettingsPage({ data }: { data: AppData }) {
       <PageTitle icon={SettingsIcon}>ตั้งค่า</PageTitle>
 
       <section className="card space-y-3">
+        <h2 className="text-lg font-bold">แผนการเรียน</h2>
+        {data.planMode ? (
+          <>
+            <p className="text-sm">ใช้แผน <b>{data.plan!.title}</b></p>
+            <div>
+              <label className="label" htmlFor="set-student">ชื่อนักเรียน</label>
+              <input id="set-student" className="input" value={s.profile?.studentName ?? ''} onChange={(e) => setS({ ...s, profile: { ...s.profile, studentName: e.target.value } })} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="label" htmlFor="set-target">เป้าหมายคะแนน /{data.plan!.exam.totalScore ?? 200}</label>
+                <input id="set-target" className="input" type="number" inputMode="numeric" min={0} max={data.plan!.exam.totalScore ?? 200}
+                  value={s.profile?.targetScore ?? ''} onChange={(e) => setS({ ...s, profile: { ...s.profile, targetScore: e.target.value ? Number(e.target.value) : null } })} />
+              </div>
+              <div>
+                <label className="label" htmlFor="set-teacher">ครูผู้สอน</label>
+                <input id="set-teacher" className="input" value={s.profile?.teacherName ?? ''} onChange={(e) => setS({ ...s, profile: { ...s.profile, teacherName: e.target.value } })} />
+              </div>
+            </div>
+            <p className="text-xs text-muted-fg">กด "บันทึกการตั้งค่า" ด้านล่างเพื่อบันทึกข้อมูลนักเรียน</p>
+            <details>
+              <summary className="flex min-h-11 items-center text-sm font-semibold text-primary">เปลี่ยนแผน</summary>
+              <div className="pt-2">
+                <PlanImport hasData={data.attempts.length > 0} onApplied={async () => setS((await db.settings.get('main'))!)} />
+              </div>
+            </details>
+            <button
+              className="min-h-11 text-sm font-semibold text-danger underline"
+              onClick={async () => {
+                if (!confirm('เลิกใช้แผนนี้ แล้วกลับไปให้แอปคำนวณโควต้าต่อวันเอง? (ประวัติการทำโจทย์ยังอยู่)')) return;
+                await db.settings.update('main', { planMode: 'auto', phaseLabels: undefined });
+                setS((await db.settings.get('main'))!);
+              }}
+            >
+              เลิกใช้แผน
+            </button>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-muted-fg">ตอนนี้แอปคำนวณโควต้าต่อวันเอง · ใช้แผนของครูหรืออัปโหลดแผน (JSON) ได้</p>
+            <PlanImport hasData={data.attempts.length > 0} onApplied={async () => setS((await db.settings.get('main'))!)} />
+          </>
+        )}
+      </section>
+
+      <section className="card space-y-3">
+        <h2 className="text-lg font-bold">คลังข้อสอบ</h2>
+        <p className="text-sm text-muted-fg">
+          {data.questions.length ? `มีโจทย์ในแอป ${data.questions.length} ข้อ · นำเข้าใหม่จะแทนที่ของเดิม (ประวัติการทำโจทย์ยังอยู่)` : 'ยังไม่มีโจทย์ในแอป'}
+        </p>
+        <BankImport />
+      </section>
+
+      <section className="card space-y-3">
         <h2 className="text-lg font-bold">การสอบและแผน</h2>
         <div>
           <label className="label" htmlFor="set-examName">ชื่อการสอบ</label>
           <input id="set-examName" className="input" value={s.examName} onChange={(e) => setS({ ...s, examName: e.target.value })} />
         </div>
         {dateRow('วันสอบ', 'examDate')}
-        <div className="grid grid-cols-2 gap-3">
-          {dateRow('วันเริ่มแผน', 'startDate')}
-          {dateRow('จบรอบแรก', 'phase1End')}
-          {dateRow('จบช่วงแก้จุดอ่อน', 'phase2End')}
-          {dateRow('จบช่วงฝึกจับเวลา', 'phase3End')}
-        </div>
-        <button className="min-h-11 text-sm font-semibold text-primary underline" onClick={() => setS({ ...s, ...defaultPhases(s.examDate) })}>
-          คำนวณช่วงจากวันสอบใหม่
-        </button>
+        {data.planMode ? (
+          <p className="rounded-2xl bg-muted/60 p-3 text-sm text-muted-fg">ช่วงต่างๆ กำหนดตามแผน "{data.plan!.title}"</p>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              {dateRow('วันเริ่มแผน', 'startDate')}
+              {dateRow('จบรอบแรก', 'phase1End')}
+              {dateRow('จบช่วงแก้จุดอ่อน', 'phase2End')}
+              {dateRow('จบช่วงฝึกจับเวลา', 'phase3End')}
+            </div>
+            <button className="min-h-11 text-sm font-semibold text-primary underline" onClick={() => setS({ ...s, ...defaultPhases(s.examDate) })}>
+              คำนวณช่วงจากวันสอบใหม่
+            </button>
+          </>
+        )}
         <div>
           <label className="label">วันพักประจำสัปดาห์</label>
           <div className="flex flex-wrap gap-2">
@@ -192,7 +253,7 @@ export default function SettingsPage({ data }: { data: AppData }) {
           <input
             ref={fileRef}
             type="file"
-            accept="application/json,.json"
+            accept="application/json,.json,application/zip,.zip"
             className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0];

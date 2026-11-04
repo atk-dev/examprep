@@ -2,22 +2,29 @@ import { BookOpen, ChartColumn } from 'lucide-react';
 import { PageTitle, Segmented } from '../components/ui';
 import { Link, useSearchParams } from 'react-router-dom';
 import Stats from './Stats';
+import PlanCalendar from './PlanCalendar';
+import Scores from './Scores';
 import { LEVEL_STYLE, ProgressBar, pct } from '../components/ui';
 import type { AppData } from '../hooks/useAppData';
 
 export default function Progress({ data }: { data: AppData }) {
   const [params, setParams] = useSearchParams();
-  const tab = params.get('tab') === 'stats' ? 'stats' : 'topics';
+  type Tab = 'plan' | 'topics' | 'scores' | 'stats';
+  const raw = params.get('tab') as Tab | null;
+  const tabs: { id: Tab; label: string }[] = data.planMode
+    ? [{ id: 'plan', label: 'ปฏิทิน' }, { id: 'topics', label: 'หัวข้อ' }, { id: 'scores', label: 'คะแนน' }, { id: 'stats', label: 'สถิติ' }]
+    : [{ id: 'topics', label: 'รายหัวข้อ' }, { id: 'stats', label: 'สถิติ' }];
+  const tab: Tab = raw && tabs.some((t) => t.id === raw) ? raw : tabs[0].id;
   return (
     <>
       <PageTitle icon={ChartColumn}>ความคืบหน้า</PageTitle>
       <Segmented
         label="มุมมอง"
         value={tab}
-        onChange={(t) => setParams(t === 'stats' ? { tab: 'stats' } : {}, { replace: true })}
-        options={[{ id: 'topics', label: 'รายหัวข้อ' }, { id: 'stats', label: 'สถิติ' }]}
+        onChange={(t) => setParams({ tab: t }, { replace: true })}
+        options={tabs}
       />
-      {tab === 'stats' ? <Stats data={data} /> : <TopicList data={data} />}
+      {tab === 'stats' ? <Stats data={data} /> : tab === 'plan' ? <PlanCalendar data={data} /> : tab === 'scores' ? <Scores data={data} /> : <TopicList data={data} />}
     </>
   );
 }

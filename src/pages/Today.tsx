@@ -14,7 +14,14 @@ import {
 } from 'lucide-react';
 import type { AppData } from '../hooks/useAppData';
 
+import PlanToday from './PlanToday';
+
 export default function Today({ data }: { data: AppData }) {
+  if (data.planMode) return <PlanToday data={data} />;
+  return <AutoToday data={data} />;
+}
+
+function AutoToday({ data }: { data: AppData }) {
   const s = data.settings!;
   const today = todayISO();
   const daysLeft = daysUntilExam(s, today);

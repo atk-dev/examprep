@@ -3,3 +3,7 @@ dist
 dev-dist
 *.tsbuildinfo
 .DS_Store
+
+# Question banks are copyrighted book content: import in the app, never commit
+examprep-questions*
+*.bank.zip

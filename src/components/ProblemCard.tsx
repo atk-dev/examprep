@@ -3,7 +3,9 @@ import { db } from '../db/db';
 import { saveMarks, saveNote } from '../db/actions';
 import { formatThai, todayISO } from '../logic/dates';
 import { MISTAKE_LABELS } from '../logic/stats';
-import type { ProblemState, Result, Subject, Topic } from '../types';
+import type { ProblemState, Question, Result, Subject, Topic } from '../types';
+import { Link } from 'react-router-dom';
+import { PencilLine } from 'lucide-react';
 import { Check, StickyNote, X } from 'lucide-react';
 import { ICON } from './ui';
 
@@ -15,7 +17,7 @@ const STATUS: Record<ProblemState['status'], { label: string; cls: string }> = {
 };
 
 /** One problem with its history, a note, and ✓/✗ buttons to record a redo. */
-export default function ProblemCard({ state: s, topic, subject, note }: { state: ProblemState; topic: Topic; subject: Subject; note?: string }) {
+export default function ProblemCard({ state: s, topic, subject, note, question }: { state: ProblemState; topic: Topic; subject: Subject; note?: string; question?: Question }) {
   const today = todayISO();
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(note ?? '');
@@ -38,13 +40,22 @@ export default function ProblemCard({ state: s, topic, subject, note }: { state:
             {s.nextReview && (s.nextReview < today ? ` · ค้างจาก ${formatThai(s.nextReview)}` : s.nextReview > today ? ` · ทวน ${formatThai(s.nextReview)}` : '')}
           </div>
         </div>
-        <button className="btn h-12 w-12 shrink-0 bg-success p-0 text-white shadow-[0_3px_0_0_#065f46]" onClick={() => answer('correct')} aria-label={`ข้อ ${s.problemNo} ทำใหม่ ถูก`}>
-          <Check size={ICON.lg} strokeWidth={3} aria-hidden />
-        </button>
-        <button className="btn h-12 w-12 shrink-0 bg-danger p-0 text-white shadow-[0_3px_0_0_#7f1d1d]" onClick={() => answer('wrong')} aria-label={`ข้อ ${s.problemNo} ทำใหม่ ผิด`}>
-          <X size={ICON.lg} strokeWidth={3} aria-hidden />
-        </button>
+        {question ? (
+          <Link to={`/log?topic=${topic.id}&from=${s.problemNo}&to=${s.problemNo}&review=1`} className="btn-primary shrink-0" aria-label={`ทำข้อ ${s.problemNo} ใหม่ในแอป`}>
+            <PencilLine size={ICON.sm} aria-hidden /> ทำใหม่
+          </Link>
+        ) : (
+          <>
+            <button className="btn h-12 w-12 shrink-0 bg-success p-0 text-white shadow-[0_3px_0_0_#065f46]" onClick={() => answer('correct')} aria-label={`ข้อ ${s.problemNo} ทำใหม่ ถูก`}>
+              <Check size={ICON.lg} strokeWidth={3} aria-hidden />
+            </button>
+            <button className="btn h-12 w-12 shrink-0 bg-danger p-0 text-white shadow-[0_3px_0_0_#7f1d1d]" onClick={() => answer('wrong')} aria-label={`ข้อ ${s.problemNo} ทำใหม่ ผิด`}>
+              <X size={ICON.lg} strokeWidth={3} aria-hidden />
+            </button>
+          </>
+        )}
       </div>
+      {question && <p className="line-clamp-3 rounded-2xl bg-muted/60 p-2.5 text-sm whitespace-pre-wrap">{question.text}</p>}
       {editing ? (
         <div className="space-y-2">
           <label className="sr-only" htmlFor={`note-${s.key}`}>โน้ตข้อ {s.problemNo}</label>

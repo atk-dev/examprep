@@ -108,6 +108,10 @@ export function reportText(args: {
   done: number;
   total: number;
   attempts: Attempt[];
+  /** Plan mode: replaces the ahead/behind wording (tasks instead of problems). */
+  planStatus?: string;
+  /** Plan mode: extra lines (tasks this week, latest mock score). */
+  extra?: string[];
 }): string {
   const { settings: s, today, week, progress, states, done, total, attempts } = args;
   const gap = planGap(s, today, states, total);
@@ -123,7 +127,8 @@ export function reportText(args: {
     `✏️ โจทย์ใหม่ ${week.newDone} ข้อ · ทวน ${week.reviewed} ข้อ`,
     `🎯 ถูกครั้งแรก ${pctText(week.accuracy)}`,
     `📅 เรียน ${week.activeDays}/7 วัน · ${week.minutes} นาที · ต่อเนื่อง ${streak(attempts, today)} วัน`,
-    `📈 รวม ${done}/${total} ข้อ (${pctText(total ? done / total : 0)}) ${gap >= 0 ? `✅ นำแผน ${gap} ข้อ` : `⚠️ ช้ากว่าแผน ${-gap} ข้อ`}`,
+    `📈 รวม ${done}/${total} ข้อ (${pctText(total ? done / total : 0)}) ${args.planStatus ?? (gap >= 0 ? `✅ นำแผน ${gap} ข้อ` : `⚠️ ช้ากว่าแผน ${-gap} ข้อ`)}`,
+    ...(args.extra ?? []),
     '',
     'รายวิชา:',
     ...progress

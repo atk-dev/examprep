@@ -82,8 +82,24 @@ export async function rebuildAllStates(db: ExamDB) {
 
 export async function saveNote(db: ExamDB, topicId: number, problemNo: number, text: string) {
   const key = problemKey(topicId, problemNo);
-  if (text.trim()) await db.problemNotes.put({ key, topicId, text: text.trim(), updatedAt: Date.now() });
+  const prev = await db.problemNotes.get(key);
+  if (text.trim() || prev?.askTeacher) await db.problemNotes.put({ key, topicId, text: text.trim(), updatedAt: Date.now(), askTeacher: prev?.askTeacher });
   else await db.problemNotes.delete(key);
+}
+
+/** Flag or unflag a problem to ask the teacher on Saturday. */
+export async function setAskTeacher(db: ExamDB, topicId: number, problemNo: number, on: boolean, text?: string) {
+  const key = problemKey(topicId, problemNo);
+  const prev = await db.problemNotes.get(key);
+  const note = text ?? prev?.text ?? '';
+  if (!on && !note) await db.problemNotes.delete(key);
+  else await db.problemNotes.put({ key, topicId, text: note, updatedAt: Date.now(), askTeacher: on || undefined });
+}
+
+/** Tick a plan task done (or undo). */
+export async function setTaskDone(db: ExamDB, taskId: string, done: boolean) {
+  if (done) await db.taskDone.put({ taskId, doneAt: Date.now() });
+  else await db.taskDone.delete(taskId);
 }
 
 export async function startMock(db: ExamDB, items: MockItem[], limitSec: number, date: ISODate) {

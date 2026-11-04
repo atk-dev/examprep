@@ -1,0 +1,1644 @@
+{
+ "format": "examprep-plan",
+ "version": 1,
+ "title": "ปฏิทินเตรียมสอบเข้า ม.1",
+ "description": "วันละวิชา วันละ 30 นาที · เสาร์ทวนสะสมและถามข้อสงสัย 1 ชั่วโมง · อาทิตย์พัก",
+ "profile": {
+  "school": "โรงเรียนปากช่อง",
+  "studentName": "",
+  "teacherName": "",
+  "targetScore": null
+ },
+ "exam": {
+  "name": "สอบเข้า ม.1",
+  "date": "2027-03-27",
+  "totalScore": 200,
+  "note": "ลำดับและเวลาตามตารางสอบจริง 2 ปีล่าสุด · ยืนยันวันสอบกับประกาศโรงเรียนอีกครั้ง",
+  "sessions": [
+   {
+    "subject": "thai",
+    "start": "09:00",
+    "minutes": 40,
+    "questions": 40
+   },
+   {
+    "subject": "math",
+    "start": "09:50",
+    "minutes": 60,
+    "questions": 40
+   },
+   {
+    "subject": "science",
+    "start": "11:00",
+    "minutes": 40,
+    "questions": 40
+   },
+   {
+    "subject": "english",
+    "start": "13:00",
+    "minutes": 60,
+    "questions": 40
+   },
+   {
+    "subject": "social",
+    "start": "14:10",
+    "minutes": 40,
+    "questions": 40
+   }
+  ]
+ },
+ "subjects": [
+  {
+   "id": "thai",
+   "name": "ภาษาไทย",
+   "color": "#0891b2"
+  },
+  {
+   "id": "math",
+   "name": "คณิตศาสตร์",
+   "color": "#4f46e5"
+  },
+  {
+   "id": "science",
+   "name": "วิทยาศาสตร์",
+   "color": "#059669"
+  },
+  {
+   "id": "english",
+   "name": "ภาษาอังกฤษ",
+   "color": "#d97706"
+  },
+  {
+   "id": "social",
+   "name": "สังคมศึกษา",
+   "color": "#db2777"
+  }
+ ],
+ "phases": [
+  {
+   "id": "chapters",
+   "name": "โจทย์ท้ายบท",
+   "start": "2026-11-09",
+   "end": "2027-01-21",
+   "goal": "ทำโจทย์ท้ายบทวันละวิชา ครบ 39 บท"
+  },
+  {
+   "id": "pretest",
+   "name": "Pretest",
+   "start": "2027-01-25",
+   "end": "2027-03-01",
+   "goal": "ทำ Pretest 13 ชุด วันเว้นวัน: วันแรกจับเวลา วันถัดไปไล่ข้อที่ผิด"
+  },
+  {
+   "id": "review",
+   "name": "ทบทวนก่อนสอบ",
+   "start": "2027-03-02",
+   "end": "2027-03-26",
+   "goal": "ทวนเรื่องที่ยังอ่อนตามตาราง + ข้อที่ผิด"
+  }
+ ],
+ "restWeekdays": [
+  0
+ ],
+ "sets": [
+  {
+   "id": "prep-math-01",
+   "subject": "math",
+   "kind": "chapter",
+   "name": "บทที่ 1 จำนวนนับที่มากกว่า 100,000",
+   "count": 15
+  },
+  {
+   "id": "prep-math-02",
+   "subject": "math",
+   "kind": "chapter",
+   "name": "บทที่ 2 การบวก ลบ คูณ หารจำนวนนับ",
+   "count": 15
+  },
+  {
+   "id": "prep-math-03",
+   "subject": "math",
+   "kind": "chapter",
+   "name": "บทที่ 3 ตัวประกอบของจำนวนนับ ห.ร.ม. และ ค.ร.น.",
+   "count": 15
+  },
+  {
+   "id": "prep-math-04",
+   "subject": "math",
+   "kind": "chapter",
+   "name": "บทที่ 4 เศษส่วน",
+   "count": 15
+  },
+  {
+   "id": "prep-math-05",
+   "subject": "math",
+   "kind": "chapter",
+   "name": "บทที่ 5 ทศนิยม",
+   "count": 15
+  },
+  {
+   "id": "prep-math-06",
+   "subject": "math",
+   "kind": "chapter",
+   "name": "บทที่ 6 สมการ และการแก้สมการ",
+   "count": 15
+  },
+  {
+   "id": "prep-math-07",
+   "subject": "math",
+   "kind": "chapter",
+   "name": "บทที่ 7 การวัด",
+   "count": 10
+  },
+  {
+   "id": "prep-math-08",
+   "subject": "math",
+   "kind": "chapter",
+   "name": "บทที่ 8 เวลา",
+   "count": 10
+  },
+  {
+   "id": "prep-math-09",
+   "subject": "math",
+   "kind": "chapter",
+   "name": "บทที่ 9 เงิน",
+   "count": 10
+  },
+  {
+   "id": "prep-math-10",
+   "subject": "math",
+   "kind": "chapter",
+   "name": "บทที่ 10 รูปเรขาคณิตและรูปทรงสามมิติ",
+   "count": 15
+  },
+  {
+   "id": "prep-math-11",
+   "subject": "math",
+   "kind": "chapter",
+   "name": "บทที่ 11 พื้นที่",
+   "count": 15
+  },
+  {
+   "id": "prep-math-12",
+   "subject": "math",
+   "kind": "chapter",
+   "name": "บทที่ 12 ปริมาตร",
+   "count": 15
+  },
+  {
+   "id": "prep-math-13",
+   "subject": "math",
+   "kind": "chapter",
+   "name": "บทที่ 13 เส้นขนาน",
+   "count": 15
+  },
+  {
+   "id": "prep-math-14",
+   "subject": "math",
+   "kind": "chapter",
+   "name": "บทที่ 14 สถิติและความน่าจะเป็น",
+   "count": 15
+  },
+  {
+   "id": "prep-math-15",
+   "subject": "math",
+   "kind": "chapter",
+   "name": "บทที่ 15 บทประยุกต์",
+   "count": 15
+  },
+  {
+   "id": "prep-thai-01",
+   "subject": "thai",
+   "kind": "chapter",
+   "name": "บทที่ 1 หลักภาษาไทย",
+   "count": 30
+  },
+  {
+   "id": "prep-thai-02",
+   "subject": "thai",
+   "kind": "chapter",
+   "name": "บทที่ 2 ภาษาพาที และวรรณคดีลำนำ",
+   "count": 10
+  },
+  {
+   "id": "prep-sci-01",
+   "subject": "science",
+   "kind": "chapter",
+   "name": "บทที่ 1 อาหารและสารอาหาร",
+   "count": 20
+  },
+  {
+   "id": "prep-sci-02",
+   "subject": "science",
+   "kind": "chapter",
+   "name": "บทที่ 2 ร่างกายมนุษย์และสัตว์",
+   "count": 20
+  },
+  {
+   "id": "prep-sci-03",
+   "subject": "science",
+   "kind": "chapter",
+   "name": "บทที่ 3 พืช",
+   "count": 20
+  },
+  {
+   "id": "prep-sci-04",
+   "subject": "science",
+   "kind": "chapter",
+   "name": "บทที่ 4 สิ่งมีชีวิตกับสิ่งแวดล้อม",
+   "count": 10
+  },
+  {
+   "id": "prep-sci-05",
+   "subject": "science",
+   "kind": "chapter",
+   "name": "บทที่ 5 สารในชีวิตประจำวัน",
+   "count": 20
+  },
+  {
+   "id": "prep-sci-06",
+   "subject": "science",
+   "kind": "chapter",
+   "name": "บทที่ 6 ไฟฟ้า",
+   "count": 20
+  },
+  {
+   "id": "prep-sci-07",
+   "subject": "science",
+   "kind": "chapter",
+   "name": "บทที่ 7 ดินและหิน",
+   "count": 10
+  },
+  {
+   "id": "prep-sci-08",
+   "subject": "science",
+   "kind": "chapter",
+   "name": "บทที่ 8 ระบบสุริยะ",
+   "count": 20
+  },
+  {
+   "id": "prep-sci-09",
+   "subject": "science",
+   "kind": "chapter",
+   "name": "บทที่ 9 แรงและการเคลื่อนที่",
+   "count": 20
+  },
+  {
+   "id": "prep-sci-10",
+   "subject": "science",
+   "kind": "chapter",
+   "name": "บทที่ 10 พลังงานและความร้อน",
+   "count": 10
+  },
+  {
+   "id": "prep-sci-11",
+   "subject": "science",
+   "kind": "chapter",
+   "name": "บทที่ 11 เสียงกับการได้ยิน",
+   "count": 10
+  },
+  {
+   "id": "prep-eng-01",
+   "subject": "english",
+   "kind": "chapter",
+   "name": "บทที่ 1 Tense",
+   "count": 80
+  },
+  {
+   "id": "prep-eng-02",
+   "subject": "english",
+   "kind": "chapter",
+   "name": "บทที่ 2 การสนทนา (Conversation)",
+   "count": 30
+  },
+  {
+   "id": "prep-eng-03",
+   "subject": "english",
+   "kind": "chapter",
+   "name": "บทที่ 3 การอ่าน (Reading)",
+   "count": 30
+  },
+  {
+   "id": "prep-eng-04",
+   "subject": "english",
+   "kind": "chapter",
+   "name": "บทที่ 4 คำศัพท์ที่ออกข้อสอบบ่อย (Vocabulary)",
+   "count": 30
+  },
+  {
+   "id": "prep-eng-05",
+   "subject": "english",
+   "kind": "chapter",
+   "name": "บทที่ 5 เบ็ดเตล็ด",
+   "count": 20
+  },
+  {
+   "id": "prep-soc-01",
+   "subject": "social",
+   "kind": "chapter",
+   "name": "บทที่ 1 ศาสนา",
+   "count": 20
+  },
+  {
+   "id": "prep-soc-02",
+   "subject": "social",
+   "kind": "chapter",
+   "name": "บทที่ 2 การปกครอง และวัฒนธรรม",
+   "count": 20
+  },
+  {
+   "id": "prep-soc-03",
+   "subject": "social",
+   "kind": "chapter",
+   "name": "บทที่ 3 เศรษฐศาสตร์",
+   "count": 20
+  },
+  {
+   "id": "prep-soc-04",
+   "subject": "social",
+   "kind": "chapter",
+   "name": "บทที่ 4 ประวัติศาสตร์",
+   "count": 20
+  },
+  {
+   "id": "prep-soc-05",
+   "subject": "social",
+   "kind": "chapter",
+   "name": "บทที่ 5 ภูมิศาสตร์",
+   "count": 20
+  },
+  {
+   "id": "prep-soc-06",
+   "subject": "social",
+   "kind": "chapter",
+   "name": "บทที่ 6 อาเซียนศึกษา",
+   "count": 20
+  },
+  {
+   "id": "pretest-math-1",
+   "subject": "math",
+   "kind": "pretest",
+   "name": "Pretest ชุดที่ 1",
+   "count": 50
+  },
+  {
+   "id": "pretest-math-2",
+   "subject": "math",
+   "kind": "pretest",
+   "name": "Pretest ชุดที่ 2",
+   "count": 50
+  },
+  {
+   "id": "pretest-math-3",
+   "subject": "math",
+   "kind": "pretest",
+   "name": "Pretest ชุดที่ 3",
+   "count": 50
+  },
+  {
+   "id": "pretest-thai-1",
+   "subject": "thai",
+   "kind": "pretest",
+   "name": "Pretest ชุดที่ 1",
+   "count": 40
+  },
+  {
+   "id": "pretest-thai-2",
+   "subject": "thai",
+   "kind": "pretest",
+   "name": "Pretest ชุดที่ 2",
+   "count": 40
+  },
+  {
+   "id": "pretest-social-1",
+   "subject": "social",
+   "kind": "pretest",
+   "name": "Pretest ชุดที่ 1",
+   "count": 30
+  },
+  {
+   "id": "pretest-social-2",
+   "subject": "social",
+   "kind": "pretest",
+   "name": "Pretest ชุดที่ 2",
+   "count": 30
+  },
+  {
+   "id": "pretest-social-3",
+   "subject": "social",
+   "kind": "pretest",
+   "name": "Pretest ชุดที่ 3",
+   "count": 30
+  },
+  {
+   "id": "pretest-science-1",
+   "subject": "science",
+   "kind": "pretest",
+   "name": "Pretest ชุดที่ 1",
+   "count": 50
+  },
+  {
+   "id": "pretest-science-2",
+   "subject": "science",
+   "kind": "pretest",
+   "name": "Pretest ชุดที่ 2",
+   "count": 50
+  },
+  {
+   "id": "pretest-science-3",
+   "subject": "science",
+   "kind": "pretest",
+   "name": "Pretest ชุดที่ 3",
+   "count": 50
+  },
+  {
+   "id": "pretest-english-1",
+   "subject": "english",
+   "kind": "pretest",
+   "name": "Pretest ชุดที่ 1",
+   "count": 50
+  },
+  {
+   "id": "pretest-english-2",
+   "subject": "english",
+   "kind": "pretest",
+   "name": "Pretest ชุดที่ 2",
+   "count": 50
+  }
+ ],
+ "tasks": [
+  {
+   "date": "2026-11-07",
+   "type": "kickoff",
+   "title": "ชี้แจงข้อตกลงและวิธีทำโจทย์",
+   "note": "1 ชม.",
+   "id": "2026-11-07-kickoff"
+  },
+  {
+   "date": "2026-11-09",
+   "type": "practice",
+   "subject": "math",
+   "set": "prep-math-01",
+   "from": 1,
+   "to": 15,
+   "minutes": null,
+   "title": "บทที่ 1 จำนวนนับที่มากกว่า 100,000 · 15 ข้อ",
+   "id": "2026-11-09-practice-prep-math-01-1"
+  },
+  {
+   "date": "2026-11-10",
+   "type": "practice",
+   "subject": "thai",
+   "set": "prep-thai-01",
+   "from": 1,
+   "to": 10,
+   "minutes": null,
+   "title": "บทที่ 1 หลักภาษาไทย · ข้อ 1–10 · 10 ข้อ",
+   "id": "2026-11-10-practice-prep-thai-01-1"
+  },
+  {
+   "date": "2026-11-11",
+   "type": "practice",
+   "subject": "social",
+   "set": "prep-soc-01",
+   "from": 1,
+   "to": 20,
+   "minutes": null,
+   "title": "บทที่ 1 ศาสนา · 20 ข้อ",
+   "id": "2026-11-11-practice-prep-soc-01-1"
+  },
+  {
+   "date": "2026-11-12",
+   "type": "practice",
+   "subject": "science",
+   "set": "prep-sci-01",
+   "from": 1,
+   "to": 20,
+   "minutes": null,
+   "title": "บทที่ 1 อาหารและสารอาหาร · 20 ข้อ",
+   "id": "2026-11-12-practice-prep-sci-01-1"
+  },
+  {
+   "date": "2026-11-13",
+   "type": "practice",
+   "subject": "english",
+   "set": "prep-eng-01",
+   "from": 1,
+   "to": 20,
+   "minutes": null,
+   "title": "บทที่ 1 Tense · ข้อ 1–20 · 20 ข้อ",
+   "id": "2026-11-13-practice-prep-eng-01-1"
+  },
+  {
+   "date": "2026-11-14",
+   "type": "saturday",
+   "title": "ทวนสะสม + ถามข้อสงสัย",
+   "note": "1 ชม. (ทวน 15′ · ถาม 45′)",
+   "id": "2026-11-14-saturday"
+  },
+  {
+   "date": "2026-11-16",
+   "type": "practice",
+   "subject": "math",
+   "set": "prep-math-02",
+   "from": 1,
+   "to": 15,
+   "minutes": null,
+   "title": "บทที่ 2 การบวก ลบ คูณ หารจำนวนนับ · 15 ข้อ",
+   "id": "2026-11-16-practice-prep-math-02-1"
+  },
+  {
+   "date": "2026-11-17",
+   "type": "practice",
+   "subject": "thai",
+   "set": "prep-thai-01",
+   "from": 11,
+   "to": 20,
+   "minutes": null,
+   "title": "บทที่ 1 หลักภาษาไทย · ข้อ 11–20 · 10 ข้อ",
+   "id": "2026-11-17-practice-prep-thai-01-11"
+  },
+  {
+   "date": "2026-11-18",
+   "type": "practice",
+   "subject": "social",
+   "set": "prep-soc-02",
+   "from": 1,
+   "to": 20,
+   "minutes": null,
+   "title": "บทที่ 2 การปกครอง และวัฒนธรรม · 20 ข้อ",
+   "id": "2026-11-18-practice-prep-soc-02-1"
+  },
+  {
+   "date": "2026-11-19",
+   "type": "practice",
+   "subject": "science",
+   "set": "prep-sci-02",
+   "from": 1,
+   "to": 20,
+   "minutes": null,
+   "title": "บทที่ 2 ร่างกายมนุษย์และสัตว์ · 20 ข้อ",
+   "id": "2026-11-19-practice-prep-sci-02-1"
+  },
+  {
+   "date": "2026-11-20",
+   "type": "practice",
+   "subject": "english",
+   "set": "prep-eng-01",
+   "from": 21,
+   "to": 40,
+   "minutes": null,
+   "title": "บทที่ 1 Tense · ข้อ 21–40 · 20 ข้อ",
+   "id": "2026-11-20-practice-prep-eng-01-21"
+  },
+  {
+   "date": "2026-11-21",
+   "type": "saturday",
+   "title": "ทวนสะสม + ถามข้อสงสัย",
+   "note": "1 ชม. (ทวน 15′ · ถาม 45′)",
+   "id": "2026-11-21-saturday"
+  },
+  {
+   "date": "2026-11-23",
+   "type": "practice",
+   "subject": "math",
+   "set": "prep-math-03",
+   "from": 1,
+   "to": 15,
+   "minutes": null,
+   "title": "บทที่ 3 ตัวประกอบของจำนวนนับ ห.ร.ม. และ ค.ร.น. · 15 ข้อ",
+   "id": "2026-11-23-practice-prep-math-03-1"
+  },
+  {
+   "date": "2026-11-24",
+   "type": "practice",
+   "subject": "thai",
+   "set": "prep-thai-01",
+   "from": 21,
+   "to": 30,
+   "minutes": null,
+   "title": "บทที่ 1 หลักภาษาไทย · ข้อ 21–30 · 10 ข้อ",
+   "id": "2026-11-24-practice-prep-thai-01-21"
+  },
+  {
+   "date": "2026-11-25",
+   "type": "practice",
+   "subject": "social",
+   "set": "prep-soc-03",
+   "from": 1,
+   "to": 20,
+   "minutes": null,
+   "title": "บทที่ 3 เศรษฐศาสตร์ · 20 ข้อ",
+   "id": "2026-11-25-practice-prep-soc-03-1"
+  },
+  {
+   "date": "2026-11-26",
+   "type": "practice",
+   "subject": "science",
+   "set": "prep-sci-03",
+   "from": 1,
+   "to": 20,
+   "minutes": null,
+   "title": "บทที่ 3 พืช · 20 ข้อ",
+   "id": "2026-11-26-practice-prep-sci-03-1"
+  },
+  {
+   "date": "2026-11-27",
+   "type": "practice",
+   "subject": "english",
+   "set": "prep-eng-01",
+   "from": 41,
+   "to": 60,
+   "minutes": null,
+   "title": "บทที่ 1 Tense · ข้อ 41–60 · 20 ข้อ",
+   "id": "2026-11-27-practice-prep-eng-01-41"
+  },
+  {
+   "date": "2026-11-28",
+   "type": "saturday",
+   "title": "ทวนสะสม + ถามข้อสงสัย",
+   "note": "1 ชม. (ทวน 15′ · ถาม 45′)",
+   "id": "2026-11-28-saturday"
+  },
+  {
+   "date": "2026-11-30",
+   "type": "practice",
+   "subject": "math",
+   "set": "prep-math-04",
+   "from": 1,
+   "to": 15,
+   "minutes": null,
+   "title": "บทที่ 4 เศษส่วน · 15 ข้อ",
+   "id": "2026-11-30-practice-prep-math-04-1"
+  },
+  {
+   "date": "2026-12-01",
+   "type": "practice",
+   "subject": "thai",
+   "set": "prep-thai-02",
+   "from": 1,
+   "to": 10,
+   "minutes": 10,
+   "title": "บทที่ 2 ภาษาพาที และวรรณคดีลำนำ · 10 ข้อ",
+   "id": "2026-12-01-practice-prep-thai-02-1"
+  },
+  {
+   "date": "2026-12-02",
+   "type": "practice",
+   "subject": "social",
+   "set": "prep-soc-04",
+   "from": 1,
+   "to": 20,
+   "minutes": 20,
+   "title": "บทที่ 4 ประวัติศาสตร์ · 20 ข้อ",
+   "id": "2026-12-02-practice-prep-soc-04-1"
+  },
+  {
+   "date": "2026-12-03",
+   "type": "practice",
+   "subject": "science",
+   "set": "prep-sci-04",
+   "from": 1,
+   "to": 10,
+   "minutes": 10,
+   "title": "บทที่ 4 สิ่งมีชีวิตกับสิ่งแวดล้อม · 10 ข้อ",
+   "id": "2026-12-03-practice-prep-sci-04-1"
+  },
+  {
+   "date": "2026-12-04",
+   "type": "practice",
+   "subject": "english",
+   "set": "prep-eng-01",
+   "from": 61,
+   "to": 80,
+   "minutes": 30,
+   "title": "บทที่ 1 Tense · ข้อ 61–80 · 20 ข้อ",
+   "id": "2026-12-04-practice-prep-eng-01-61"
+  },
+  {
+   "date": "2026-12-05",
+   "type": "saturday",
+   "title": "ทวนสะสม + ถามข้อสงสัย",
+   "note": "1 ชม. (ทวน 15′ · ถาม 45′)",
+   "id": "2026-12-05-saturday"
+  },
+  {
+   "date": "2026-12-07",
+   "type": "practice",
+   "subject": "math",
+   "set": "prep-math-05",
+   "from": 1,
+   "to": 15,
+   "minutes": 23,
+   "title": "บทที่ 5 ทศนิยม · 15 ข้อ",
+   "id": "2026-12-07-practice-prep-math-05-1"
+  },
+  {
+   "date": "2026-12-08",
+   "type": "subjectReview",
+   "subject": "thai",
+   "title": "ทวนบทที่จบแล้ว",
+   "note": "หลักภาษาไทย · ภาษาพาที · วรรณคดีลำนำ",
+   "id": "2026-12-08-subjectReview-thai"
+  },
+  {
+   "date": "2026-12-09",
+   "type": "practice",
+   "subject": "social",
+   "set": "prep-soc-05",
+   "from": 1,
+   "to": 20,
+   "minutes": 20,
+   "title": "บทที่ 5 ภูมิศาสตร์ · 20 ข้อ",
+   "id": "2026-12-09-practice-prep-soc-05-1"
+  },
+  {
+   "date": "2026-12-10",
+   "type": "practice",
+   "subject": "science",
+   "set": "prep-sci-05",
+   "from": 1,
+   "to": 20,
+   "minutes": 20,
+   "title": "บทที่ 5 สารในชีวิตประจำวัน · 20 ข้อ",
+   "id": "2026-12-10-practice-prep-sci-05-1"
+  },
+  {
+   "date": "2026-12-11",
+   "type": "practice",
+   "subject": "english",
+   "set": "prep-eng-02",
+   "from": 1,
+   "to": 15,
+   "minutes": 23,
+   "title": "บทที่ 2 การสนทนา (Conversation) · ข้อ 1–15 · 15 ข้อ",
+   "id": "2026-12-11-practice-prep-eng-02-1"
+  },
+  {
+   "date": "2026-12-12",
+   "type": "saturday",
+   "title": "ทวนสะสม + ถามข้อสงสัย",
+   "note": "1 ชม. (ทวน 15′ · ถาม 45′)",
+   "id": "2026-12-12-saturday"
+  },
+  {
+   "date": "2026-12-14",
+   "type": "practice",
+   "subject": "math",
+   "set": "prep-math-06",
+   "from": 1,
+   "to": 15,
+   "minutes": 23,
+   "title": "บทที่ 6 สมการ และการแก้สมการ · 15 ข้อ",
+   "id": "2026-12-14-practice-prep-math-06-1"
+  },
+  {
+   "date": "2026-12-15",
+   "type": "subjectReview",
+   "subject": "thai",
+   "title": "ทวนบทที่จบแล้ว",
+   "note": "หลักภาษาไทย · ภาษาพาที · วรรณคดีลำนำ",
+   "id": "2026-12-15-subjectReview-thai"
+  },
+  {
+   "date": "2026-12-16",
+   "type": "practice",
+   "subject": "social",
+   "set": "prep-soc-06",
+   "from": 1,
+   "to": 20,
+   "minutes": 20,
+   "title": "บทที่ 6 อาเซียนศึกษา · 20 ข้อ",
+   "id": "2026-12-16-practice-prep-soc-06-1"
+  },
+  {
+   "date": "2026-12-17",
+   "type": "practice",
+   "subject": "science",
+   "set": "prep-sci-06",
+   "from": 1,
+   "to": 20,
+   "minutes": 20,
+   "title": "บทที่ 6 ไฟฟ้า · 20 ข้อ",
+   "id": "2026-12-17-practice-prep-sci-06-1"
+  },
+  {
+   "date": "2026-12-18",
+   "type": "practice",
+   "subject": "english",
+   "set": "prep-eng-02",
+   "from": 16,
+   "to": 30,
+   "minutes": 23,
+   "title": "บทที่ 2 การสนทนา (Conversation) · ข้อ 16–30 · 15 ข้อ",
+   "id": "2026-12-18-practice-prep-eng-02-16"
+  },
+  {
+   "date": "2026-12-19",
+   "type": "saturday",
+   "title": "ทวนสะสม + ถามข้อสงสัย",
+   "note": "1 ชม. (ทวน 15′ · ถาม 45′)",
+   "id": "2026-12-19-saturday"
+  },
+  {
+   "date": "2026-12-21",
+   "type": "practice",
+   "subject": "math",
+   "set": "prep-math-07",
+   "from": 1,
+   "to": 10,
+   "minutes": 15,
+   "title": "บทที่ 7 การวัด · 10 ข้อ",
+   "id": "2026-12-21-practice-prep-math-07-1"
+  },
+  {
+   "date": "2026-12-22",
+   "type": "subjectReview",
+   "subject": "thai",
+   "title": "ทวนบทที่จบแล้ว",
+   "note": "หลักภาษาไทย · ภาษาพาที · วรรณคดีลำนำ",
+   "id": "2026-12-22-subjectReview-thai"
+  },
+  {
+   "date": "2026-12-23",
+   "type": "subjectReview",
+   "subject": "social",
+   "title": "ทวนบท 1–2",
+   "note": "ศาสนา · การปกครองและวัฒนธรรม",
+   "id": "2026-12-23-subjectReview-social"
+  },
+  {
+   "date": "2026-12-24",
+   "type": "practice",
+   "subject": "science",
+   "set": "prep-sci-07",
+   "from": 1,
+   "to": 10,
+   "minutes": 10,
+   "title": "บทที่ 7 ดินและหิน · 10 ข้อ",
+   "id": "2026-12-24-practice-prep-sci-07-1"
+  },
+  {
+   "date": "2026-12-25",
+   "type": "practice",
+   "subject": "english",
+   "set": "prep-eng-03",
+   "from": 1,
+   "to": 15,
+   "minutes": 23,
+   "title": "บทที่ 3 การอ่าน (Reading) · ข้อ 1–15 · 15 ข้อ",
+   "id": "2026-12-25-practice-prep-eng-03-1"
+  },
+  {
+   "date": "2026-12-26",
+   "type": "saturday",
+   "title": "ทวนสะสม + ถามข้อสงสัย",
+   "note": "1 ชม. (ทวน 15′ · ถาม 45′)",
+   "id": "2026-12-26-saturday"
+  },
+  {
+   "date": "2026-12-28",
+   "type": "practice",
+   "subject": "math",
+   "set": "prep-math-08",
+   "from": 1,
+   "to": 10,
+   "minutes": 15,
+   "title": "บทที่ 8 เวลา · 10 ข้อ",
+   "id": "2026-12-28-practice-prep-math-08-1"
+  },
+  {
+   "date": "2026-12-29",
+   "type": "subjectReview",
+   "subject": "thai",
+   "title": "ทวนบทที่จบแล้ว",
+   "note": "หลักภาษาไทย · ภาษาพาที · วรรณคดีลำนำ",
+   "id": "2026-12-29-subjectReview-thai"
+  },
+  {
+   "date": "2026-12-30",
+   "type": "subjectReview",
+   "subject": "social",
+   "title": "ทวนบท 3–4",
+   "note": "เศรษฐศาสตร์ · ประวัติศาสตร์",
+   "id": "2026-12-30-subjectReview-social"
+  },
+  {
+   "date": "2026-12-31",
+   "type": "practice",
+   "subject": "science",
+   "set": "prep-sci-08",
+   "from": 1,
+   "to": 20,
+   "minutes": 20,
+   "title": "บทที่ 8 ระบบสุริยะ · 20 ข้อ",
+   "id": "2026-12-31-practice-prep-sci-08-1"
+  },
+  {
+   "date": "2027-01-01",
+   "type": "practice",
+   "subject": "english",
+   "set": "prep-eng-03",
+   "from": 16,
+   "to": 30,
+   "minutes": 23,
+   "title": "บทที่ 3 การอ่าน (Reading) · ข้อ 16–30 · 15 ข้อ",
+   "id": "2027-01-01-practice-prep-eng-03-16"
+  },
+  {
+   "date": "2027-01-02",
+   "type": "saturday",
+   "title": "ทวนสะสม + ถามข้อสงสัย",
+   "note": "1 ชม. (ทวน 15′ · ถาม 45′)",
+   "id": "2027-01-02-saturday"
+  },
+  {
+   "date": "2027-01-04",
+   "type": "practice",
+   "subject": "math",
+   "set": "prep-math-09",
+   "from": 1,
+   "to": 10,
+   "minutes": 15,
+   "title": "บทที่ 9 เงิน · 10 ข้อ",
+   "id": "2027-01-04-practice-prep-math-09-1"
+  },
+  {
+   "date": "2027-01-05",
+   "type": "practice",
+   "subject": "science",
+   "set": "prep-sci-09",
+   "from": 1,
+   "to": 20,
+   "minutes": 20,
+   "title": "บทที่ 9 แรงและการเคลื่อนที่ · 20 ข้อ",
+   "id": "2027-01-05-practice-prep-sci-09-1"
+  },
+  {
+   "date": "2027-01-06",
+   "type": "subjectReview",
+   "subject": "social",
+   "title": "ทวนบท 5–6",
+   "note": "ภูมิศาสตร์ · อาเซียนศึกษา",
+   "id": "2027-01-06-subjectReview-social"
+  },
+  {
+   "date": "2027-01-07",
+   "type": "practice",
+   "subject": "english",
+   "set": "prep-eng-04",
+   "from": 1,
+   "to": 15,
+   "minutes": 23,
+   "title": "บทที่ 4 คำศัพท์ที่ออกข้อสอบบ่อย (Vocabulary) · ข้อ 1–15 · 15 ข้อ",
+   "id": "2027-01-07-practice-prep-eng-04-1"
+  },
+  {
+   "date": "2027-01-08",
+   "type": "practice",
+   "subject": "math",
+   "set": "prep-math-10",
+   "from": 1,
+   "to": 15,
+   "minutes": 23,
+   "title": "บทที่ 10 รูปเรขาคณิตและรูปทรงสามมิติ · 15 ข้อ",
+   "id": "2027-01-08-practice-prep-math-10-1"
+  },
+  {
+   "date": "2027-01-09",
+   "type": "saturday",
+   "title": "ทวนสะสม + ถามข้อสงสัย",
+   "note": "1 ชม. (ทวน 15′ · ถาม 45′)",
+   "id": "2027-01-09-saturday"
+  },
+  {
+   "date": "2027-01-11",
+   "type": "practice",
+   "subject": "science",
+   "set": "prep-sci-10",
+   "from": 1,
+   "to": 10,
+   "minutes": 10,
+   "title": "บทที่ 10 พลังงานและความร้อน · 10 ข้อ",
+   "id": "2027-01-11-practice-prep-sci-10-1"
+  },
+  {
+   "date": "2027-01-12",
+   "type": "practice",
+   "subject": "english",
+   "set": "prep-eng-04",
+   "from": 16,
+   "to": 30,
+   "minutes": 23,
+   "title": "บทที่ 4 คำศัพท์ที่ออกข้อสอบบ่อย (Vocabulary) · ข้อ 16–30 · 15 ข้อ",
+   "id": "2027-01-12-practice-prep-eng-04-16"
+  },
+  {
+   "date": "2027-01-13",
+   "type": "practice",
+   "subject": "math",
+   "set": "prep-math-11",
+   "from": 1,
+   "to": 15,
+   "minutes": 23,
+   "title": "บทที่ 11 พื้นที่ · 15 ข้อ",
+   "id": "2027-01-13-practice-prep-math-11-1"
+  },
+  {
+   "date": "2027-01-14",
+   "type": "practice",
+   "subject": "science",
+   "set": "prep-sci-11",
+   "from": 1,
+   "to": 10,
+   "minutes": 10,
+   "title": "บทที่ 11 เสียงกับการได้ยิน · 10 ข้อ",
+   "id": "2027-01-14-practice-prep-sci-11-1"
+  },
+  {
+   "date": "2027-01-15",
+   "type": "practice",
+   "subject": "english",
+   "set": "prep-eng-05",
+   "from": 1,
+   "to": 20,
+   "minutes": 30,
+   "title": "บทที่ 5 เบ็ดเตล็ด · 20 ข้อ",
+   "id": "2027-01-15-practice-prep-eng-05-1"
+  },
+  {
+   "date": "2027-01-16",
+   "type": "saturday",
+   "title": "ทวนสะสม + ถามข้อสงสัย",
+   "note": "1 ชม. (ทวน 15′ · ถาม 45′)",
+   "id": "2027-01-16-saturday"
+  },
+  {
+   "date": "2027-01-18",
+   "type": "practice",
+   "subject": "math",
+   "set": "prep-math-12",
+   "from": 1,
+   "to": 15,
+   "minutes": 23,
+   "title": "บทที่ 12 ปริมาตร · 15 ข้อ",
+   "id": "2027-01-18-practice-prep-math-12-1"
+  },
+  {
+   "date": "2027-01-19",
+   "type": "practice",
+   "subject": "math",
+   "set": "prep-math-13",
+   "from": 1,
+   "to": 15,
+   "minutes": 23,
+   "title": "บทที่ 13 เส้นขนาน · 15 ข้อ",
+   "id": "2027-01-19-practice-prep-math-13-1"
+  },
+  {
+   "date": "2027-01-20",
+   "type": "practice",
+   "subject": "math",
+   "set": "prep-math-14",
+   "from": 1,
+   "to": 15,
+   "minutes": 23,
+   "title": "บทที่ 14 สถิติและความน่าจะเป็น · 15 ข้อ",
+   "id": "2027-01-20-practice-prep-math-14-1"
+  },
+  {
+   "date": "2027-01-21",
+   "type": "practice",
+   "subject": "math",
+   "set": "prep-math-15",
+   "from": 1,
+   "to": 15,
+   "minutes": 23,
+   "title": "บทที่ 15 บทประยุกต์ · 15 ข้อ",
+   "id": "2027-01-21-practice-prep-math-15-1"
+  },
+  {
+   "date": "2027-01-22",
+   "type": "catchup",
+   "title": "วันเก็บตก",
+   "note": "ทำโจทย์ที่ค้าง หรือพัก",
+   "id": "2027-01-22-catchup"
+  },
+  {
+   "date": "2027-01-23",
+   "type": "saturday",
+   "title": "ทวนสะสม + ถามข้อสงสัย",
+   "note": "1 ชม. (ทวน 15′ · ถาม 45′)",
+   "id": "2027-01-23-saturday"
+  },
+  {
+   "date": "2027-01-25",
+   "type": "timed",
+   "subject": "math",
+   "set": "pretest-math-1",
+   "from": 1,
+   "to": 40,
+   "minutes": 60,
+   "title": "Pretest ชุดที่ 1 · ทำข้อ 1–40 รวดเดียว จับเวลา 60 นาที",
+   "id": "2027-01-25-timed-pretest-math-1-1"
+  },
+  {
+   "date": "2027-01-26",
+   "type": "reviewWrong",
+   "subject": "math",
+   "set": "pretest-math-1",
+   "from": 41,
+   "to": 50,
+   "title": "Pretest ชุดที่ 1 · ไล่ข้อที่ผิด แล้วทำข้อ 41–50",
+   "id": "2027-01-26-reviewWrong-pretest-math-1-41"
+  },
+  {
+   "date": "2027-01-27",
+   "type": "timed",
+   "subject": "thai",
+   "set": "pretest-thai-1",
+   "from": 1,
+   "to": 40,
+   "minutes": 40,
+   "title": "Pretest ชุดที่ 1 · ทำข้อ 1–40 รวดเดียว จับเวลา 40 นาที",
+   "id": "2027-01-27-timed-pretest-thai-1-1"
+  },
+  {
+   "date": "2027-01-28",
+   "type": "reviewWrong",
+   "subject": "thai",
+   "set": "pretest-thai-1",
+   "title": "Pretest ชุดที่ 1 · ไล่ข้อที่ผิด",
+   "id": "2027-01-28-reviewWrong-pretest-thai-1"
+  },
+  {
+   "date": "2027-01-29",
+   "type": "timed",
+   "subject": "social",
+   "set": "pretest-social-1",
+   "from": 1,
+   "to": 30,
+   "minutes": 30,
+   "title": "Pretest ชุดที่ 1 · ทำข้อ 1–30 รวดเดียว จับเวลา 30 นาที",
+   "id": "2027-01-29-timed-pretest-social-1-1"
+  },
+  {
+   "date": "2027-01-30",
+   "type": "saturday",
+   "title": "ทวนสะสม + ถามข้อสงสัย",
+   "note": "1 ชม. (ทวน 15′ · ถาม 45′)",
+   "id": "2027-01-30-saturday"
+  },
+  {
+   "date": "2027-02-01",
+   "type": "reviewWrong",
+   "subject": "social",
+   "set": "pretest-social-1",
+   "title": "Pretest ชุดที่ 1 · ไล่ข้อที่ผิด",
+   "id": "2027-02-01-reviewWrong-pretest-social-1"
+  },
+  {
+   "date": "2027-02-02",
+   "type": "timed",
+   "subject": "science",
+   "set": "pretest-science-1",
+   "from": 1,
+   "to": 40,
+   "minutes": 40,
+   "title": "Pretest ชุดที่ 1 · ทำข้อ 1–40 รวดเดียว จับเวลา 40 นาที",
+   "id": "2027-02-02-timed-pretest-science-1-1"
+  },
+  {
+   "date": "2027-02-03",
+   "type": "reviewWrong",
+   "subject": "science",
+   "set": "pretest-science-1",
+   "from": 41,
+   "to": 50,
+   "title": "Pretest ชุดที่ 1 · ไล่ข้อที่ผิด แล้วทำข้อ 41–50",
+   "id": "2027-02-03-reviewWrong-pretest-science-1-41"
+  },
+  {
+   "date": "2027-02-04",
+   "type": "timed",
+   "subject": "english",
+   "set": "pretest-english-1",
+   "from": 1,
+   "to": 40,
+   "minutes": 60,
+   "title": "Pretest ชุดที่ 1 · ทำข้อ 1–40 รวดเดียว จับเวลา 60 นาที",
+   "id": "2027-02-04-timed-pretest-english-1-1"
+  },
+  {
+   "date": "2027-02-05",
+   "type": "reviewWrong",
+   "subject": "english",
+   "set": "pretest-english-1",
+   "from": 41,
+   "to": 50,
+   "title": "Pretest ชุดที่ 1 · ไล่ข้อที่ผิด แล้วทำข้อ 41–50",
+   "id": "2027-02-05-reviewWrong-pretest-english-1-41"
+  },
+  {
+   "date": "2027-02-06",
+   "type": "mock",
+   "title": "สอบจำลองครั้งที่ 1",
+   "note": "ใช้เป็นตัววัด · ข้อสอบเก่า / แหล่งอื่น",
+   "mock": 1,
+   "id": "2027-02-06-mock"
+  },
+  {
+   "date": "2027-02-08",
+   "type": "timed",
+   "subject": "math",
+   "set": "pretest-math-2",
+   "from": 1,
+   "to": 40,
+   "minutes": 60,
+   "title": "Pretest ชุดที่ 2 · ทำข้อ 1–40 รวดเดียว จับเวลา 60 นาที",
+   "id": "2027-02-08-timed-pretest-math-2-1"
+  },
+  {
+   "date": "2027-02-09",
+   "type": "reviewWrong",
+   "subject": "math",
+   "set": "pretest-math-2",
+   "from": 41,
+   "to": 50,
+   "title": "Pretest ชุดที่ 2 · ไล่ข้อที่ผิด แล้วทำข้อ 41–50",
+   "id": "2027-02-09-reviewWrong-pretest-math-2-41"
+  },
+  {
+   "date": "2027-02-10",
+   "type": "timed",
+   "subject": "thai",
+   "set": "pretest-thai-2",
+   "from": 1,
+   "to": 40,
+   "minutes": 40,
+   "title": "Pretest ชุดที่ 2 · ทำข้อ 1–40 รวดเดียว จับเวลา 40 นาที",
+   "id": "2027-02-10-timed-pretest-thai-2-1"
+  },
+  {
+   "date": "2027-02-11",
+   "type": "reviewWrong",
+   "subject": "thai",
+   "set": "pretest-thai-2",
+   "title": "Pretest ชุดที่ 2 · ไล่ข้อที่ผิด",
+   "id": "2027-02-11-reviewWrong-pretest-thai-2"
+  },
+  {
+   "date": "2027-02-12",
+   "type": "timed",
+   "subject": "social",
+   "set": "pretest-social-2",
+   "from": 1,
+   "to": 30,
+   "minutes": 30,
+   "title": "Pretest ชุดที่ 2 · ทำข้อ 1–30 รวดเดียว จับเวลา 30 นาที",
+   "id": "2027-02-12-timed-pretest-social-2-1"
+  },
+  {
+   "date": "2027-02-13",
+   "type": "saturday",
+   "title": "ทวนสะสม + ถามข้อสงสัย",
+   "note": "1 ชม. (ทวน 15′ · ถาม 45′)",
+   "id": "2027-02-13-saturday"
+  },
+  {
+   "date": "2027-02-15",
+   "type": "reviewWrong",
+   "subject": "social",
+   "set": "pretest-social-2",
+   "title": "Pretest ชุดที่ 2 · ไล่ข้อที่ผิด",
+   "id": "2027-02-15-reviewWrong-pretest-social-2"
+  },
+  {
+   "date": "2027-02-16",
+   "type": "timed",
+   "subject": "science",
+   "set": "pretest-science-2",
+   "from": 1,
+   "to": 40,
+   "minutes": 40,
+   "title": "Pretest ชุดที่ 2 · ทำข้อ 1–40 รวดเดียว จับเวลา 40 นาที",
+   "id": "2027-02-16-timed-pretest-science-2-1"
+  },
+  {
+   "date": "2027-02-17",
+   "type": "reviewWrong",
+   "subject": "science",
+   "set": "pretest-science-2",
+   "from": 41,
+   "to": 50,
+   "title": "Pretest ชุดที่ 2 · ไล่ข้อที่ผิด แล้วทำข้อ 41–50",
+   "id": "2027-02-17-reviewWrong-pretest-science-2-41"
+  },
+  {
+   "date": "2027-02-18",
+   "type": "timed",
+   "subject": "english",
+   "set": "pretest-english-2",
+   "from": 1,
+   "to": 40,
+   "minutes": 60,
+   "title": "Pretest ชุดที่ 2 · ทำข้อ 1–40 รวดเดียว จับเวลา 60 นาที",
+   "id": "2027-02-18-timed-pretest-english-2-1"
+  },
+  {
+   "date": "2027-02-19",
+   "type": "reviewWrong",
+   "subject": "english",
+   "set": "pretest-english-2",
+   "from": 41,
+   "to": 50,
+   "title": "Pretest ชุดที่ 2 · ไล่ข้อที่ผิด แล้วทำข้อ 41–50",
+   "id": "2027-02-19-reviewWrong-pretest-english-2-41"
+  },
+  {
+   "date": "2027-02-20",
+   "type": "mock",
+   "title": "สอบจำลองครั้งที่ 2",
+   "note": "ข้อสอบเก่า / แหล่งอื่น",
+   "mock": 2,
+   "id": "2027-02-20-mock"
+  },
+  {
+   "date": "2027-02-22",
+   "type": "timed",
+   "subject": "math",
+   "set": "pretest-math-3",
+   "from": 1,
+   "to": 40,
+   "minutes": 60,
+   "title": "Pretest ชุดที่ 3 · ทำข้อ 1–40 รวดเดียว จับเวลา 60 นาที",
+   "id": "2027-02-22-timed-pretest-math-3-1"
+  },
+  {
+   "date": "2027-02-23",
+   "type": "reviewWrong",
+   "subject": "math",
+   "set": "pretest-math-3",
+   "from": 41,
+   "to": 50,
+   "title": "Pretest ชุดที่ 3 · ไล่ข้อที่ผิด แล้วทำข้อ 41–50",
+   "id": "2027-02-23-reviewWrong-pretest-math-3-41"
+  },
+  {
+   "date": "2027-02-24",
+   "type": "timed",
+   "subject": "social",
+   "set": "pretest-social-3",
+   "from": 1,
+   "to": 30,
+   "minutes": 30,
+   "title": "Pretest ชุดที่ 3 · ทำข้อ 1–30 รวดเดียว จับเวลา 30 นาที",
+   "id": "2027-02-24-timed-pretest-social-3-1"
+  },
+  {
+   "date": "2027-02-25",
+   "type": "reviewWrong",
+   "subject": "social",
+   "set": "pretest-social-3",
+   "title": "Pretest ชุดที่ 3 · ไล่ข้อที่ผิด",
+   "id": "2027-02-25-reviewWrong-pretest-social-3"
+  },
+  {
+   "date": "2027-02-26",
+   "type": "timed",
+   "subject": "science",
+   "set": "pretest-science-3",
+   "from": 1,
+   "to": 40,
+   "minutes": 40,
+   "title": "Pretest ชุดที่ 3 · ทำข้อ 1–40 รวดเดียว จับเวลา 40 นาที",
+   "id": "2027-02-26-timed-pretest-science-3-1"
+  },
+  {
+   "date": "2027-02-27",
+   "type": "saturday",
+   "title": "ทวนสะสม + ถามข้อสงสัย",
+   "note": "1 ชม. (ทวน 15′ · ถาม 45′)",
+   "id": "2027-02-27-saturday"
+  },
+  {
+   "date": "2027-03-01",
+   "type": "reviewWrong",
+   "subject": "science",
+   "set": "pretest-science-3",
+   "from": 41,
+   "to": 50,
+   "title": "Pretest ชุดที่ 3 · ไล่ข้อที่ผิด แล้วทำข้อ 41–50",
+   "id": "2027-03-01-reviewWrong-pretest-science-3-41"
+  },
+  {
+   "date": "2027-03-02",
+   "type": "subjectReview",
+   "subject": "thai",
+   "title": "ทวนเรื่องที่ยังอ่อน",
+   "note": "ตามตาราง + ข้อที่ผิด",
+   "id": "2027-03-02-subjectReview-thai"
+  },
+  {
+   "date": "2027-03-03",
+   "type": "subjectReview",
+   "subject": "social",
+   "title": "ทวนเรื่องที่ยังอ่อน",
+   "note": "ตามตาราง + ข้อที่ผิด",
+   "id": "2027-03-03-subjectReview-social"
+  },
+  {
+   "date": "2027-03-04",
+   "type": "subjectReview",
+   "subject": "science",
+   "title": "ทวนเรื่องที่ยังอ่อน",
+   "note": "ตามตาราง + ข้อที่ผิด",
+   "id": "2027-03-04-subjectReview-science"
+  },
+  {
+   "date": "2027-03-05",
+   "type": "subjectReview",
+   "subject": "english",
+   "title": "ทวนเรื่องที่ยังอ่อน",
+   "note": "ตามตาราง + ข้อที่ผิด",
+   "id": "2027-03-05-subjectReview-english"
+  },
+  {
+   "date": "2027-03-06",
+   "type": "mock",
+   "title": "สอบจำลองครั้งที่ 3",
+   "note": "ข้อสอบเก่า / แหล่งอื่น",
+   "mock": 3,
+   "id": "2027-03-06-mock"
+  },
+  {
+   "date": "2027-03-08",
+   "type": "subjectReview",
+   "subject": "math",
+   "title": "ทวนเรื่องที่ยังอ่อน",
+   "note": "ตามตาราง + ข้อที่ผิด",
+   "id": "2027-03-08-subjectReview-math"
+  },
+  {
+   "date": "2027-03-09",
+   "type": "subjectReview",
+   "subject": "thai",
+   "title": "ทวนเรื่องที่ยังอ่อน",
+   "note": "ตามตาราง + ข้อที่ผิด",
+   "id": "2027-03-09-subjectReview-thai"
+  },
+  {
+   "date": "2027-03-10",
+   "type": "subjectReview",
+   "subject": "social",
+   "title": "ทวนเรื่องที่ยังอ่อน",
+   "note": "ตามตาราง + ข้อที่ผิด",
+   "id": "2027-03-10-subjectReview-social"
+  },
+  {
+   "date": "2027-03-11",
+   "type": "subjectReview",
+   "subject": "science",
+   "title": "ทวนเรื่องที่ยังอ่อน",
+   "note": "ตามตาราง + ข้อที่ผิด",
+   "id": "2027-03-11-subjectReview-science"
+  },
+  {
+   "date": "2027-03-12",
+   "type": "subjectReview",
+   "subject": "english",
+   "title": "ทวนเรื่องที่ยังอ่อน",
+   "note": "ตามตาราง + ข้อที่ผิด",
+   "id": "2027-03-12-subjectReview-english"
+  },
+  {
+   "date": "2027-03-13",
+   "type": "mock",
+   "title": "สอบจำลองครั้งที่ 4",
+   "note": "คณิต 4 · วิทย์ 4 · อังกฤษ 3",
+   "mock": 4,
+   "id": "2027-03-13-mock"
+  },
+  {
+   "date": "2027-03-15",
+   "type": "subjectReview",
+   "subject": "math",
+   "title": "ทวนเรื่องที่ยังอ่อน",
+   "note": "ตามตาราง + ข้อที่ผิด",
+   "id": "2027-03-15-subjectReview-math"
+  },
+  {
+   "date": "2027-03-16",
+   "type": "subjectReview",
+   "subject": "thai",
+   "title": "ทวนเรื่องที่ยังอ่อน",
+   "note": "ตามตาราง + ข้อที่ผิด",
+   "id": "2027-03-16-subjectReview-thai"
+  },
+  {
+   "date": "2027-03-17",
+   "type": "subjectReview",
+   "subject": "social",
+   "title": "ทวนเรื่องที่ยังอ่อน",
+   "note": "ตามตาราง + ข้อที่ผิด",
+   "id": "2027-03-17-subjectReview-social"
+  },
+  {
+   "date": "2027-03-18",
+   "type": "subjectReview",
+   "subject": "science",
+   "title": "ทวนเรื่องที่ยังอ่อน",
+   "note": "ตามตาราง + ข้อที่ผิด",
+   "id": "2027-03-18-subjectReview-science"
+  },
+  {
+   "date": "2027-03-19",
+   "type": "subjectReview",
+   "subject": "english",
+   "title": "ทวนเรื่องที่ยังอ่อน",
+   "note": "ตามตาราง + ข้อที่ผิด",
+   "id": "2027-03-19-subjectReview-english"
+  },
+  {
+   "date": "2027-03-20",
+   "type": "mock",
+   "title": "สอบจำลองครั้งที่ 5",
+   "note": "คณิต 5 · วิทย์ 5 · ไทย 3",
+   "mock": 5,
+   "id": "2027-03-20-mock"
+  },
+  {
+   "date": "2027-03-22",
+   "type": "subjectReview",
+   "subject": "math",
+   "title": "ทวนเรื่องที่ยังอ่อน",
+   "note": "ตามตาราง + ข้อที่ผิด",
+   "id": "2027-03-22-subjectReview-math"
+  },
+  {
+   "date": "2027-03-23",
+   "type": "subjectReview",
+   "subject": "thai",
+   "title": "ทวนเรื่องที่ยังอ่อน",
+   "note": "ตามตาราง + ข้อที่ผิด",
+   "id": "2027-03-23-subjectReview-thai"
+  },
+  {
+   "date": "2027-03-24",
+   "type": "subjectReview",
+   "subject": "social",
+   "title": "ทวนเรื่องที่ยังอ่อน",
+   "note": "ตามตาราง + ข้อที่ผิด",
+   "id": "2027-03-24-subjectReview-social"
+  },
+  {
+   "date": "2027-03-25",
+   "type": "subjectReview",
+   "subject": "science",
+   "title": "ทวนเรื่องที่ยังอ่อน",
+   "note": "ตามตาราง + ข้อที่ผิด",
+   "id": "2027-03-25-subjectReview-science"
+  },
+  {
+   "date": "2027-03-26",
+   "type": "subjectReview",
+   "subject": "english",
+   "title": "ทวนเรื่องที่ยังอ่อน",
+   "note": "ตามตาราง + ข้อที่ผิด",
+   "id": "2027-03-26-subjectReview-english"
+  },
+  {
+   "date": "2027-03-27",
+   "type": "exam",
+   "title": "วันสอบ",
+   "id": "2027-03-27-exam"
+  }
+ ],
+ "mocks": [
+  {
+   "n": 1,
+   "date": "2027-02-06",
+   "note": "ใช้เป็นตัววัด · ข้อสอบเก่า / แหล่งอื่น"
+  },
+  {
+   "n": 2,
+   "date": "2027-02-20",
+   "note": "ข้อสอบเก่า / แหล่งอื่น"
+  },
+  {
+   "n": 3,
+   "date": "2027-03-06",
+   "note": "ข้อสอบเก่า / แหล่งอื่น"
+  },
+  {
+   "n": 4,
+   "date": "2027-03-13",
+   "note": "คณิต 4 · วิทย์ 4 · อังกฤษ 3"
+  },
+  {
+   "n": 5,
+   "date": "2027-03-20",
+   "note": "คณิต 5 · วิทย์ 5 · ไทย 3"
+  }
+ ]
+}

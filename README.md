@@ -26,6 +26,11 @@ Exam prep tracker for working through a problem book (topic summaries + ~1,600 p
 
 วันนี้ also changes with the phase: weak topics to fix in Feb, one timed set a day in March, a calm checklist in the final week. A banner appears when the last backup is over 7 days old.
 
+## Teacher's plan and question bank
+- **ใช้แผนของครู** (first launch or ตั้งค่า → แผนการเรียน) loads the bundled `public/plans/teacher-m1-2570.json`: the paper calendar "ปฏิทินเตรียมสอบเข้า ม.1" (9 พ.ย. 69 – 27 มี.ค. 70) — 39 chapters, 13 Pretests, review days, Saturday sessions and 5 mock exams. วันนี้ then shows exactly that day's task, a list of missed tasks, and the calendar/score pages under ความคืบหน้า. Any other plan in the same format can be uploaded ([docs/plan-format.md](docs/plan-format.md)).
+- **คลังข้อสอบ** (ตั้งค่า → คลังข้อสอบ) imports a zip of questions, choices, answers, solutions and figures ([docs/question-format.md](docs/question-format.md)). Sets with questions are practised inside the app (check answer → book solution → why wrong → ask teacher on Saturday); sets without questions keep the ✓/✗ number grid. Banks stay on the device and are never committed.
+- Backups are now a `.zip` that includes the plan, bank and figures; older `.json` backups still import.
+
 ## Reminders
 The app has no server, so it can't push notifications. Instead, **ตั้งค่า → แจ้งเตือน → เพิ่มลงปฏิทิน** downloads a calendar file with a daily study alarm (rest days skipped) until the exam, plus the exam day itself. Open it on the phone to add it to the calendar app.
 
@@ -50,3 +55,4 @@ Stack: Vite, React, TypeScript, Tailwind CSS, Dexie (IndexedDB), vite-plugin-pwa
 - **M1** ✅ setup, today plan, fast problem logging, mistake review, progress, backup, PWA
 - **M2** ✅ mistake notebook with filters and notes, stats charts, parent view (PIN) + shareable weekly report
 - **M3** ✅ timed mixed sets, phase-specific guidance, calendar reminders, backup reminder
+- **M4** ✅ teacher's plan as JSON, in-app question bank and quiz, plan calendar, score sheets, mock-exam record

@@ -1,7 +1,7 @@
 import { GraduationCap, Rocket, Sparkles } from 'lucide-react';
 import { ICON } from '../components/ui';
 import { useRef, useState } from 'react';
-import { importBackup, parseBackup } from '../db/backup';
+import { importBackup, readBackupFile } from '../db/backup';
 import { db } from '../db/db';
 import { defaultSettings, DEFAULT_EXAM_DATE } from '../db/defaults';
 import { replaceTopics, saveSettings } from '../db/actions';
@@ -9,9 +9,11 @@ import { DEFAULT_TEMPLATE_COUNT, MAX_TEMPLATE_COUNT, clampCount, templateFor, te
 import { defaultPhases, studyDaysBetween } from '../logic/plan';
 import { TH_WEEKDAYS, todayISO } from '../logic/dates';
 import TopicEditor from '../components/TopicEditor';
+import { BankImport, PlanImport } from '../components/ImportPanels';
+import { PencilRuler } from 'lucide-react';
 import type { AppData } from '../hooks/useAppData';
 
-export default function Setup({ data }: { data: AppData }) {
+function CustomSetup({ data, onBack }: { data: AppData; onBack: () => void }) {
   const [step, setStep] = useState(0);
   const [examName, setExamName] = useState(data.settings?.examName ?? 'สอบเข้า ม.1');
   const [examDate, setExamDate] = useState(data.settings?.examDate ?? DEFAULT_EXAM_DATE);
@@ -33,7 +35,8 @@ export default function Setup({ data }: { data: AppData }) {
 
   async function restore(file: File) {
     try {
-      await importBackup(db, parseBackup(await file.text()));
+      const { backup, figures } = readBackupFile(new Uint8Array(await file.arrayBuffer()));
+      await importBackup(db, backup, figures);
     } catch (e) {
       setImportError((e as Error).message);
     }
@@ -70,16 +73,19 @@ export default function Setup({ data }: { data: AppData }) {
       {step === 0 && (
         <div className="card space-y-4">
           <div>
-            <label className="label">ชื่อการสอบ</label>
-            <input className="input" value={examName} onChange={(e) => setExamName(e.target.value)} />
+            <label className="label" htmlFor="setup-name">ชื่อการสอบ</label>
+            <input id="setup-name" className="input" value={examName} onChange={(e) => setExamName(e.target.value)} />
           </div>
           <div>
-            <label className="label">วันสอบ</label>
-            <input type="date" className="input" value={examDate} min={today} onChange={(e) => setExamDate(e.target.value)} />
+            <label className="label" htmlFor="setup-date">วันสอบ</label>
+            <input id="setup-date" type="date" className="input" value={examDate} min={today} onChange={(e) => setExamDate(e.target.value)} />
           </div>
-          <button className="btn-primary w-full" disabled={!examDate || examDate <= today} onClick={() => setStep(1)}>
-            ถัดไป
-          </button>
+          <div className="flex gap-2">
+            <button className="btn-ghost flex-1" onClick={onBack}>ย้อนกลับ</button>
+            <button className="btn-primary flex-1" disabled={!examDate || examDate <= today} onClick={() => setStep(1)}>
+              ถัดไป
+            </button>
+          </div>
           <div className="border-t border-muted pt-3 text-center">
             <button className="min-h-11 text-sm font-semibold text-primary underline" onClick={() => fileRef.current?.click()}>
               มีไฟล์สำรองข้อมูลอยู่แล้ว? กู้คืนข้อมูล
@@ -87,7 +93,7 @@ export default function Setup({ data }: { data: AppData }) {
             <input
               ref={fileRef}
               type="file"
-              accept="application/json,.json"
+              accept="application/json,.json,application/zip,.zip"
               className="hidden"
               onChange={(e) => {
                 const f = e.target.files?.[0];
@@ -195,6 +201,109 @@ export default function Setup({ data }: { data: AppData }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function Header({ subtitle }: { subtitle: string }) {
+  return (
+    <header className="pt-4 text-center">
+      <span className="mx-auto grid h-20 w-20 place-items-center rounded-[1.75rem] bg-primary text-on-primary shadow-[0_6px_0_0_var(--color-primary-strong)]">
+        <GraduationCap size={40} aria-hidden />
+      </span>
+      <h1 className="mt-4 text-3xl font-bold">ตะลุยโจทย์สอบเข้า ม.1</h1>
+      <p className="mt-1 text-muted-fg">{subtitle}</p>
+    </header>
+  );
+}
+
+/** After a plan is applied: profile, then the optional question bank. */
+function PlanSetup({ data }: { data: AppData }) {
+  const s = data.settings!;
+  const [step, setStep] = useState<'profile' | 'bank'>('profile');
+  const [name, setName] = useState(s.profile?.studentName ?? '');
+  const [target, setTarget] = useState(s.profile?.targetScore ? String(s.profile.targetScore) : '');
+  const [teacher, setTeacher] = useState(s.profile?.teacherName ?? '');
+  const max = data.plan?.exam.totalScore ?? 200;
+
+  async function saveProfile() {
+    const t = Math.round(Number(target));
+    await db.settings.update('main', {
+      profile: { ...s.profile, studentName: name.trim(), teacherName: teacher.trim(), targetScore: t > 0 ? Math.min(t, max) : null },
+    });
+    setStep('bank');
+  }
+
+  return (
+    <div className="mx-auto max-w-2xl space-y-4 p-4">
+      <Header subtitle={`${data.plan?.title ?? 'แผนการเรียน'} · ${step === 'profile' ? 'ข้อมูลนักเรียน' : 'คลังข้อสอบ'}`} />
+      {step === 'profile' ? (
+        <div className="card space-y-4">
+          <div>
+            <label className="label" htmlFor="p-name">ชื่อนักเรียน</label>
+            <input id="p-name" className="input" value={name} onChange={(e) => setName(e.target.value)} autoComplete="given-name" />
+          </div>
+          <div>
+            <label className="label" htmlFor="p-target">เป้าหมายคะแนนรวม (เต็ม {max})</label>
+            <input id="p-target" className="input" inputMode="numeric" type="number" min={0} max={max} value={target} onChange={(e) => setTarget(e.target.value)} />
+          </div>
+          <div>
+            <label className="label" htmlFor="p-teacher">ครูผู้สอน</label>
+            <input id="p-teacher" className="input" value={teacher} onChange={(e) => setTeacher(e.target.value)} />
+          </div>
+          <button className="btn-primary w-full" onClick={saveProfile}>ถัดไป</button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <div className="card space-y-2 text-sm">
+            <p>นำเข้าคลังข้อสอบ (โจทย์ + เฉลย) เพื่อทำโจทย์ในแอปได้เลย ข้ามได้ถ้ายังไม่มีไฟล์ จะบันทึกจากหนังสือเป็นเลขข้อแทน</p>
+            <p className="text-muted-fg">นำเข้าภายหลังได้ที่หน้าตั้งค่า</p>
+          </div>
+          <BankImport />
+          <button className="btn-cta w-full" onClick={() => db.settings.update('main', { setupDone: true })}>
+            <Rocket size={ICON.md} aria-hidden /> {data.questions.length ? 'เริ่มเลย' : 'ข้ามไปก่อน · เริ่มเลย'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function Setup({ data }: { data: AppData }) {
+  const [custom, setCustom] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [importError, setImportError] = useState('');
+  if (data.settings?.planMode === 'plan' && data.plan) return <PlanSetup data={data} />;
+  if (custom) return <CustomSetup data={data} onBack={() => setCustom(false)} />;
+
+  async function restore(file: File) {
+    try {
+      const { backup, figures } = readBackupFile(new Uint8Array(await file.arrayBuffer()));
+      await importBackup(db, backup, figures);
+    } catch (e) {
+      setImportError((e as Error).message);
+    }
+  }
+
+  return (
+    <div className="mx-auto max-w-2xl space-y-4 p-4">
+      <Header subtitle="เริ่มจากแผนการเรียน" />
+      <PlanImport hasData={data.attempts.length > 0} />
+      <button className="card flex w-full items-center gap-3 text-left" onClick={() => setCustom(true)}>
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-muted text-primary"><PencilRuler size={ICON.lg} aria-hidden /></span>
+        <span>
+          <span className="block font-display text-lg font-bold">สร้างแผนเอง</span>
+          <span className="block text-sm text-muted-fg">ตั้งวันสอบ ใส่หัวข้อเอง แอปคำนวณโควต้าต่อวันให้</span>
+        </span>
+      </button>
+      <div className="text-center">
+        <button className="min-h-11 text-sm font-semibold text-primary underline" onClick={() => fileRef.current?.click()}>
+          มีไฟล์สำรองข้อมูลอยู่แล้ว? กู้คืนข้อมูล
+        </button>
+        <input ref={fileRef} type="file" accept="application/json,.json,application/zip,.zip" className="hidden"
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) restore(f); e.target.value = ''; }} />
+        {importError && <p className="mt-1 text-sm text-danger" role="alert">{importError}</p>}
+      </div>
     </div>
   );
 }

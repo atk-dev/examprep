@@ -5,7 +5,7 @@ import { db } from '../db/db';
 import { ICON } from './ui';
 
 /** A figure from the question bank, loaded from IndexedDB; tap to view full screen. */
-export default function FigureImage({ id, alt }: { id: string; alt: string }) {
+export default function FigureImage({ id, alt, inline = false }: { id: string; alt: string; inline?: boolean }) {
   const fig = useLiveQuery(() => db.figures.get(id), [id]);
   const [url, setUrl] = useState<string | null>(null);
   const [zoom, setZoom] = useState(false);
@@ -17,6 +17,7 @@ export default function FigureImage({ id, alt }: { id: string; alt: string }) {
   }, [fig]);
   if (fig === undefined) return <div className="h-32 animate-pulse rounded-2xl bg-muted" aria-hidden />;
   if (!fig || !url) return <p className="rounded-2xl bg-warning-bg p-3 text-sm text-warning">ไม่พบรูปประกอบ ดูในหนังสือ</p>;
+  if (inline) return <img src={url} alt={alt} className="max-h-48 w-auto max-w-full rounded-xl bg-white object-contain" />;
   return (
     <>
       <button className="group relative block w-full overflow-hidden rounded-2xl border-2 border-border bg-white" onClick={() => setZoom(true)} aria-label={`ขยาย${alt}`}>

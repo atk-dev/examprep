@@ -155,10 +155,17 @@ export interface Question {
   key: string; // `${setKey}:${no}`
   setKey: string;
   no: number;
-  type: 'choice' | 'short' | 'open';
+  type: 'choice' | 'multi' | 'short' | 'open';
   text: string;
-  choices?: string[];
-  answer: number | string | null;
+  choices?: (string | { text?: string; image?: string })[];
+  answer: number | number[] | string | null;
+  /** 'rich' = **bold**, __underline__, *italic*, $LaTeX$ */
+  format?: 'plain' | 'rich';
+  points?: number;
+  tags?: string[];
+  /** Where to find it in the book, e.g. "เตรียมสอบ ป.6 · หน้า 336". */
+  source?: string;
+  audio?: string;
   solution?: string;
   topic?: string;
   passageId?: string;
@@ -171,11 +178,13 @@ export interface Passage {
   id: string;
   text: string;
   image?: string;
+  audio?: string;
+  format?: 'plain' | 'rich';
 }
 
-/** Image bytes from a question bank (kept as ArrayBuffer; shown through an object URL). */
+/** Image or audio bytes from a question bank (kept as ArrayBuffer; used through an object URL). */
 export interface Figure {
-  id: string; // path inside the bank zip, e.g. figures/prep-math-04-012.png
+  id: string; // path inside the bank zip, e.g. figures/prep-math-04-012.png or audio/eng-01.mp3
   mime: string;
   data: ArrayBuffer;
 }

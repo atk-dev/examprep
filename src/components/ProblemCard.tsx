@@ -6,6 +6,7 @@ import { MISTAKE_LABELS } from '../logic/stats';
 import type { ProblemState, Question, Result, Subject, Topic } from '../types';
 import { Link } from 'react-router-dom';
 import { PencilLine } from 'lucide-react';
+import { plainOf } from './RichText';
 import { Check, StickyNote, X } from 'lucide-react';
 import { ICON } from './ui';
 
@@ -55,7 +56,7 @@ export default function ProblemCard({ state: s, topic, subject, note, question }
           </>
         )}
       </div>
-      {question && <p className="line-clamp-3 rounded-2xl bg-muted/60 p-2.5 text-sm whitespace-pre-wrap">{question.text}</p>}
+      {question && <p className="line-clamp-3 rounded-2xl bg-muted/60 p-2.5 text-sm whitespace-pre-wrap">{plainOf(question.text, question.format)}</p>}
       {editing ? (
         <div className="space-y-2">
           <label className="sr-only" htmlFor={`note-${s.key}`}>โน้ตข้อ {s.problemNo}</label>

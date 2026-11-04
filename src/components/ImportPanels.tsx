@@ -155,10 +155,11 @@ export function BankImport({ onApplied }: { onApplied?: (n: number) => void }) {
         <section className="card space-y-3" aria-live="polite">
           <h3 className="text-lg font-bold">คลังข้อสอบ {sum.exams} ชุด · {sum.questions} ข้อ</h3>
           <p className="text-sm">
-            {Object.entries(sum.bySubject).map(([k, n]) => `${SUBJECT_TH[k] ?? k} ${n}`).join(' · ')}
+            {Object.entries(sum.bySubject).map(([k, n]) => `${read!.bank!.subjects?.find((x) => x.id === k)?.name ?? SUBJECT_TH[k] ?? k} ${n}`).join(' · ')}
           </p>
           <ul className="space-y-0.5 text-sm text-muted-fg">
-            <li>มีเฉลย {sum.withAnswer}/{sum.questions} ข้อ · รูป {sum.figures} · บทอ่าน {sum.passages}</li>
+            <li>มีเฉลย {sum.withAnswer}/{sum.questions} ข้อ · รูป {sum.figures}{sum.audio ? ` · เสียง ${sum.audio}` : ''} · บทอ่าน {sum.passages}</li>
+            {sum.withAnswer < sum.questions && <li>ข้อที่ไม่มีเฉลย นักเรียนตรวจเองจากคำอธิบาย</li>}
             {sum.needsReview > 0 && <li className="text-warning">{sum.needsReview} ข้อควรตรวจกับหนังสือ (จะมีป้ายเตือนในข้อนั้น)</li>}
           </ul>
           {progress ? (

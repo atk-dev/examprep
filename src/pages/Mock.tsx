@@ -60,6 +60,15 @@ function MockExams({ data }: { data: AppData }) {
   }, [n, rec?.n]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const name = (k: string) => data.subjectByKey.get(k)?.name ?? k;
+  // 1.1: question sets this mock can run in the app, one per subject.
+  const inApp = new Map<string, { topicId: number; correct: number; answered: number }>();
+  for (const id of mock.sets ?? []) {
+    const set = plan.sets.find((x) => x.id === id);
+    const topic = data.topicByKey.get(id);
+    if (!set || !topic || !data.questionsByTopic.has(topic.id!)) continue;
+    const states = [...(data.statesByTopic.get(topic.id!)?.values() ?? [])];
+    inApp.set(set.subject, { topicId: topic.id!, answered: states.length, correct: states.filter((x) => x.firstResult === 'correct').length });
+  }
   const sum = sessions.reduce((acc, x) => acc + (Number(scores[x.subject]) || 0), 0);
   const invalid = sessions.some((x) => scores[x.subject] !== '' && scores[x.subject] !== undefined && (Number(scores[x.subject]) < 0 || Number(scores[x.subject]) > x.questions));
 
@@ -117,6 +126,28 @@ function MockExams({ data }: { data: AppData }) {
           <button className="btn-primary w-full" onClick={startTimer}><AlarmClock size={ICON.md} aria-hidden /> จับเวลาตามตารางสอบจริง</button>
         )}
       </section>
+
+      {inApp.size > 0 && (
+        <section className="card space-y-2">
+          <CardTitle>ทำข้อสอบชุดนี้ในแอป</CardTitle>
+          <ul className="space-y-2">
+            {sessions.filter((x) => inApp.has(x.subject)).map((x) => {
+              const a = inApp.get(x.subject)!;
+              return (
+                <li key={x.subject} className="flex flex-wrap items-center gap-2">
+                  <span className="min-w-0 flex-1 text-sm font-semibold">{name(x.subject)} <span className="font-normal text-muted-fg">· ทำแล้ว {a.answered} ข้อ</span></span>
+                  <Link to={`/log?topic=${a.topicId}&minutes=${x.minutes}`} className="btn-primary text-sm">ทำในแอป</Link>
+                  {a.answered > 0 && (
+                    <button className="btn-ghost text-sm" onClick={() => { setScores((cur) => ({ ...cur, [x.subject]: String(a.correct) })); setSaved(false); }}>
+                      ใช้คะแนน {a.correct}
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       <section className="card space-y-3">
         <CardTitle>คะแนน</CardTitle>

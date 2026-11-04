@@ -6,18 +6,19 @@ import type { AppData } from '../hooks/useAppData';
 import { formatThai } from '../logic/dates';
 import { weakTopics } from '../logic/insights';
 import type { PlanTask } from '../plan/planSchema';
-import { taskStatus } from '../plan/progress';
+import { nextRange, taskStatus } from '../plan/progress';
 import { ICON, ProgressBar, pct } from './ui';
 
 export const TASK_LABEL: Record<PlanTask['type'], string> = {
   practice: 'โจทย์ท้ายบท', timed: 'Pretest จับเวลา', reviewWrong: 'ไล่ข้อที่ผิด', subjectReview: 'ทบทวน',
-  saturday: 'เสาร์ทวนสะสม', mock: 'สอบจำลอง', catchup: 'วันเก็บตก', kickoff: 'เริ่มต้น', exam: 'วันสอบ',
+  saturday: 'เสาร์ทวนสะสม', mock: 'สอบจำลอง', catchup: 'วันเก็บตก', kickoff: 'เริ่มต้น', exam: 'วันสอบ', custom: 'งาน',
 };
 
 /** Where a task's main button goes. */
 export function taskLink(t: PlanTask, data: AppData): string | null {
-  const topic = t.set ? data.topicByKey.get(t.set) : undefined;
-  if (topic && t.from && t.to) return `/log?topic=${topic.id}&from=${t.from}&to=${t.to}${t.minutes ? `&minutes=${t.minutes}` : ''}`;
+  const r = nextRange(t, data.taskCtx);
+  const topic = r ? data.topicByKey.get(r.set) : undefined;
+  if (r && topic) return `/log?topic=${topic.id}&from=${r.from}&to=${r.to}${t.minutes ? `&minutes=${t.minutes}` : ''}`;
   if (t.type === 'reviewWrong' || t.type === 'subjectReview') {
     const subject = t.subject ? data.subjectByKey.get(t.subject) : undefined;
     return `/review?tab=notebook${subject ? `&subject=${subject.id}` : ''}`;
@@ -51,8 +52,10 @@ export default function TaskCard({ t, data, compact = false }: { t: PlanTask; da
   const st = taskStatus(t, data.taskCtx);
   const link = taskLink(t, data);
   const subject = t.subject ? data.subjectByKey.get(t.subject) : undefined;
-  const topic = t.set ? data.topicByKey.get(t.set) : undefined;
+  const range = nextRange(t, data.taskCtx);
+  const topic = t.set ? data.topicByKey.get(t.set) : range ? data.topicByKey.get(range.set) : undefined;
   const hasQuiz = topic ? data.questionsByTopic.has(topic.id!) : false;
+  const refs = (t.sets ?? []).map((r) => data.topicByKey.get(r.set)).filter(Boolean);
   const auto = st.size !== undefined;
 
   if (compact) {
@@ -80,6 +83,11 @@ export default function TaskCard({ t, data, compact = false }: { t: PlanTask; da
       </div>
       <h2 className="text-xl font-bold">{t.title}</h2>
       {t.note && <p className="text-sm text-muted-fg">{t.note}</p>}
+      {refs.length > 0 && (
+        <ul className="flex flex-wrap gap-1.5 text-xs" aria-label="ชุดที่เกี่ยวข้อง">
+          {refs.map((tp) => <li key={tp!.id} className="rounded-full bg-muted px-2.5 py-1 font-semibold">{tp!.name}</li>)}
+        </ul>
+      )}
       {t.minutes ? (
         <p className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
           <Timer size={ICON.sm} aria-hidden /> จับเวลา {t.minutes} นาที

@@ -17,30 +17,50 @@ export interface TaskStatus {
   correct?: number;
 }
 
-const range = (t: PlanTask) => (t.from && t.to ? { from: t.from, to: t.to } : null);
+/** Problem ranges a task counts toward completion: `set/from/to` plus any ranged `sets` entries (1.1). */
+export function taskRanges(t: PlanTask): { set: string; from: number; to: number }[] {
+  const out: { set: string; from: number; to: number }[] = [];
+  if (t.set && t.from && t.to) out.push({ set: t.set, from: t.from, to: t.to });
+  for (const r of t.sets ?? []) if (r.from && r.to) out.push({ set: r.set, from: r.from, to: r.to });
+  return out;
+}
 
-/** Tasks with a problem range finish by themselves once every problem is answered. */
+/** Tasks with problem ranges finish by themselves once every problem is answered. */
 export function taskStatus(t: PlanTask, ctx: TaskCtx): TaskStatus {
   const manual = ctx.doneIds.has(t.id);
   if (t.type === 'mock') {
     const m = ctx.mockExams.find((x) => x.n === t.mock);
     return { done: manual || (!!m && Object.values(m.scores).some((v) => v !== null && v !== undefined)) };
   }
-  const r = range(t);
-  const topic = t.set ? ctx.topicByKey.get(t.set) : undefined;
-  if (!r || !topic) return { done: manual };
-  const states = ctx.statesByTopic.get(topic.id!);
+  const ranges = taskRanges(t).filter((r) => ctx.topicByKey.has(r.set));
+  if (!ranges.length) return { done: manual };
   let answered = 0;
   let correct = 0;
-  for (let n = r.from; n <= r.to; n++) {
-    const s = states?.get(n);
-    if (s) {
-      answered++;
-      if (s.firstResult === 'correct') correct++;
+  let size = 0;
+  for (const r of ranges) {
+    const states = ctx.statesByTopic.get(ctx.topicByKey.get(r.set)!.id!);
+    size += r.to - r.from + 1;
+    for (let n = r.from; n <= r.to; n++) {
+      const s = states?.get(n);
+      if (s) {
+        answered++;
+        if (s.firstResult === 'correct') correct++;
+      }
     }
   }
-  const size = r.to - r.from + 1;
   return { done: manual || answered === size, answered, size, correct };
+}
+
+/** The first range of a task that still has unanswered problems (where its button should go). */
+export function nextRange(t: PlanTask, ctx: TaskCtx) {
+  const ranges = taskRanges(t).filter((r) => ctx.topicByKey.has(r.set));
+  return (
+    ranges.find((r) => {
+      const states = ctx.statesByTopic.get(ctx.topicByKey.get(r.set)!.id!);
+      for (let n = r.from; n <= r.to; n++) if (!states?.has(n)) return true;
+      return false;
+    }) ?? ranges[0]
+  );
 }
 
 /** Everything except the exam itself can be ticked off. */
@@ -67,7 +87,7 @@ export const mockTotal = (m: MockExam | undefined) =>
 /** Cumulative problems scheduled by the plan vs actually started, one point per day. */
 export function planCurve(tasks: PlanTask[], states: ProblemState[], today: ISODate) {
   const planned = new Map<ISODate, number>();
-  for (const t of tasks) if (t.from && t.to) planned.set(t.date, (planned.get(t.date) ?? 0) + t.to - t.from + 1);
+  for (const t of tasks) for (const r of taskRanges(t)) planned.set(t.date, (planned.get(t.date) ?? 0) + r.to - r.from + 1);
   const firstByDay = new Map<ISODate, number>();
   for (const s of states) firstByDay.set(s.firstDate, (firstByDay.get(s.firstDate) ?? 0) + 1);
   const start = tasks[0]?.date;

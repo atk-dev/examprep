@@ -8,6 +8,9 @@ import { formatClock } from '../logic/mock';
 import { MISTAKE_LABELS } from '../logic/stats';
 import type { MistakeReason, Passage, ProblemNote, ProblemState, Question, Subject, Topic } from '../types';
 import FigureImage from './FigureImage';
+import AudioClip from './AudioClip';
+import RichText, { plainOf } from './RichText';
+import { choiceImage, choiceText } from '../plan/bankSchema';
 import { CardTitle, ICON, ProgressBar } from './ui';
 
 interface Props {
@@ -24,8 +27,13 @@ interface Props {
 
 const norm = (s: string) => s.replace(/\s+/g, '').toLowerCase();
 
-function isCorrect(q: Question, picked: number | null, typed: string, self: boolean | null) {
-  if (q.type === 'choice') return picked !== null && picked === q.answer;
+export function isCorrect(q: Question, picked: number[], typed: string, self: boolean | null) {
+  if (q.answer === null || q.answer === '') return self === true; // no key: self-graded
+  if (q.type === 'choice') return picked.length === 1 && picked[0] === q.answer;
+  if (q.type === 'multi') {
+    const ans = Array.isArray(q.answer) ? q.answer : [q.answer as number];
+    return picked.length === ans.length && ans.every((a) => picked.includes(a));
+  }
   if (q.type === 'short' && q.answer !== null && q.answer !== '') return norm(typed) === norm(String(q.answer));
   return self === true;
 }
@@ -35,7 +43,7 @@ export default function Quiz({ topic, subject, nos: nosProp, questions, passages
   // Freeze the list at start: answering a question changes what the parent would pass next.
   const [nos] = useState(nosProp);
   const [idx, setIdx] = useState(0);
-  const [picked, setPicked] = useState<number | null>(null);
+  const [picked, setPicked] = useState<number[]>([]);
   const [typed, setTyped] = useState('');
   const [self, setSelf] = useState<boolean | null>(null);
   const [checked, setChecked] = useState(false);
@@ -59,14 +67,19 @@ export default function Quiz({ topic, subject, nos: nosProp, questions, passages
   const asked = !!notes.get(askKey)?.askTeacher;
   const seenBefore = no !== undefined && states.has(no);
 
-  const canCheck = q && (q.type === 'choice' ? picked !== null : q.type === 'short' ? typed.trim() !== '' : self !== null);
+  const noKey = q ? q.answer === null || q.answer === '' : false;
+  const isChoice = q?.type === 'choice' || q?.type === 'multi';
+  const canCheck = q && (isChoice ? picked.length > 0 : q.type === 'short' ? typed.trim() !== '' : self !== null);
+  const answers = q ? (Array.isArray(q.answer) ? q.answer : typeof q.answer === 'number' ? [q.answer] : []) : [];
+  const pick = (n: number) =>
+    setPicked((cur) => (q?.type === 'multi' ? (cur.includes(n) ? cur.filter((x) => x !== n) : [...cur, n].sort()) : [n]));
 
   async function next() {
     if (!q) return;
     await saveMarks(db, [{ topicId: topic.id!, problemNo: no, result: correct ? 'correct' : 'wrong', reason: correct ? undefined : reason }], todayISO(), seenBefore);
     setResults((r) => [...r, { no, correct }]);
     setIdx((i) => i + 1);
-    setPicked(null);
+    setPicked([]);
     setTyped('');
     setSelf(null);
     setChecked(false);
@@ -106,7 +119,9 @@ export default function Quiz({ topic, subject, nos: nosProp, questions, passages
     <div className="space-y-3">
       <div className="card space-y-2 p-3">
         <div className="flex items-center justify-between gap-2 text-sm">
-          <span className="font-semibold">ข้อ {q.no} <span className="font-normal text-muted-fg">({idx + 1} จาก {nos.length})</span></span>
+          <span className="font-semibold">
+            ข้อ {q.no} <span className="font-normal text-muted-fg">({idx + 1} จาก {nos.length}){q.points ? ` · ${q.points} คะแนน` : ''}</span>
+          </span>
           {left !== null && (
             <span role="timer" aria-label={`เหลือเวลา ${formatClock(Math.max(left, 0))}`}
               className={`inline-flex items-center gap-1 rounded-full px-3 py-1 font-bold tabular-nums ${left <= 60 ? 'bg-danger text-white' : 'bg-primary/10 text-primary'}`}>
@@ -127,36 +142,43 @@ export default function Quiz({ topic, subject, nos: nosProp, questions, passages
         {passage && (
           <details open className="rounded-2xl bg-muted/60 p-3">
             <summary className="min-h-11 font-semibold">ข้อมูลประกอบ / บทอ่าน</summary>
-            {passage.text && <p className="mt-2 text-sm whitespace-pre-wrap">{passage.text}</p>}
+            {passage.audio && <div className="mt-2"><AudioClip id={passage.audio} label="เสียงประกอบบทอ่าน" /></div>}
+            {passage.text && <RichText as="p" className="mt-2 text-sm" text={passage.text} format={passage.format} />}
             {passage.image && <div className="mt-2"><FigureImage id={passage.image} alt="รูปประกอบบทอ่าน" /></div>}
           </details>
         )}
-        <p id="q-text" className="text-lg leading-relaxed whitespace-pre-wrap">{q.text}</p>
+        {q.audio && <AudioClip id={q.audio} label={`เสียงข้อ ${q.no}`} />}
+        <RichText as="p" id="q-text" className="text-lg leading-relaxed" text={q.text} format={q.format} />
         {q.image && <FigureImage id={q.image} alt={`รูปประกอบข้อ ${q.no}`} />}
+        {q.type === 'multi' && <p className="text-sm font-semibold text-primary">เลือกได้มากกว่า 1 ข้อ</p>}
 
-        {q.type === 'choice' && (
+        {isChoice && (
           <div className="space-y-2" role="group" aria-label="ตัวเลือก">
             {(q.choices ?? []).map((c, i) => {
               const n = i + 1;
-              const isAns = checked && n === q.answer;
-              const isWrongPick = checked && n === picked && n !== q.answer;
+              const isAns = checked && !noKey && answers.includes(n);
+              const isWrongPick = checked && !noKey && picked.includes(n) && !answers.includes(n);
+              const img = choiceImage(c);
               return (
                 <button
                   key={i}
                   disabled={checked}
-                  aria-pressed={picked === n}
-                  onClick={() => setPicked(n)}
+                  aria-pressed={picked.includes(n)}
+                  aria-label={`ตัวเลือก ${label(i)}: ${[plainOf(choiceText(c), q.format), img ? 'รูปภาพ' : ''].filter(Boolean).join(' ')}${isAns ? ' (คำตอบที่ถูก)' : isWrongPick ? ' (ที่เลือก ผิด)' : ''}`}
+                  onClick={() => pick(n)}
                   className={`flex min-h-14 w-full items-center gap-3 rounded-2xl border-2 p-3 text-left text-base transition-colors duration-100 disabled:cursor-default ${
                     isAns ? 'border-success bg-success-bg text-success'
                       : isWrongPick ? 'border-danger bg-danger-bg text-danger'
-                        : picked === n ? 'border-primary bg-primary/10' : 'border-border bg-card'
+                        : picked.includes(n) ? 'border-primary bg-primary/10' : 'border-border bg-card'
                   }`}
                 >
-                  <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full font-bold ${picked === n || isAns ? 'bg-fg text-white' : 'bg-muted'}`} aria-hidden>
+                  <span className={`grid h-9 w-9 shrink-0 place-items-center ${q.type === 'multi' ? 'rounded-lg' : 'rounded-full'} font-bold ${picked.includes(n) || isAns ? 'bg-fg text-white' : 'bg-muted'}`} aria-hidden>
                     {isAns ? <Check size={ICON.sm} strokeWidth={3} /> : isWrongPick ? <X size={ICON.sm} strokeWidth={3} /> : label(i)}
                   </span>
-                  <span className="whitespace-pre-wrap">{c}</span>
-                  <span className="sr-only">{isAns ? ' (คำตอบที่ถูก)' : isWrongPick ? ' (ที่เลือก ผิด)' : ''}</span>
+                  <span className="min-w-0 flex-1 space-y-2">
+                    {choiceText(c) && <RichText text={choiceText(c)} format={q.format} />}
+                    {img && <ChoiceImage id={img} alt={`ตัวเลือก ${label(i)}`} />}
+                  </span>
                 </button>
               );
             })}
@@ -173,7 +195,7 @@ export default function Quiz({ topic, subject, nos: nosProp, questions, passages
         )}
 
         {!checked ? (
-          q.type === 'open' ? (
+          q.type === 'open' || noKey ? (
             <div className="flex gap-2">
               <button className="btn-ghost flex-1" onClick={() => { setSelf(true); setChecked(true); }}>ดูเฉลย · ฉันตอบถูก</button>
               <button className="btn-ghost flex-1" onClick={() => { setSelf(false); setChecked(true); }}>ดูเฉลย · ฉันตอบผิด</button>
@@ -185,12 +207,12 @@ export default function Quiz({ topic, subject, nos: nosProp, questions, passages
           <div className="space-y-3" aria-live="polite">
             <p className={`flex items-center gap-2 rounded-2xl p-3 font-display text-lg font-bold ${correct ? 'bg-success-bg text-success' : 'bg-danger-bg text-danger'}`}>
               {correct ? <Check size={ICON.lg} strokeWidth={3} aria-hidden /> : <X size={ICON.lg} strokeWidth={3} aria-hidden />}
-              {correct ? 'ถูกต้อง!' : q.type === 'choice' ? `ยังไม่ถูก · คำตอบคือข้อ ${label(Number(q.answer) - 1)}` : q.type === 'short' ? `ยังไม่ถูก · คำตอบคือ ${q.answer}` : 'ไว้ทวนอีกครั้ง'}
+              {correct ? 'ถูกต้อง!' : isChoice && !noKey ? `ยังไม่ถูก · คำตอบคือข้อ ${answers.map((a) => label(a - 1)).join(', ')}` : q.type === 'short' && !noKey ? `ยังไม่ถูก · คำตอบคือ ${q.answer}` : 'ไว้ทวนอีกครั้ง'}
             </p>
             {q.solution && (
               <details open={!correct} className="rounded-2xl bg-primary/10 p-3">
                 <summary className="flex min-h-11 items-center gap-2 font-semibold"><Lightbulb size={ICON.sm} aria-hidden /> เฉลยจากหนังสือ</summary>
-                <p className="mt-2 text-sm leading-relaxed whitespace-pre-wrap">{q.solution}</p>
+                <RichText as="p" className="mt-2 text-sm leading-relaxed" text={q.solution} format={q.format} />
               </details>
             )}
             {!correct && (
@@ -203,6 +225,7 @@ export default function Quiz({ topic, subject, nos: nosProp, questions, passages
                 </div>
               </div>
             )}
+            {q.source && <p className="text-xs text-muted-fg">ที่มา: {q.source}</p>}
             <button className="chip" aria-pressed={asked} onClick={() => setAskTeacher(db, topic.id!, no, !asked)}>
               <CircleHelp size={ICON.sm} aria-hidden /> {asked ? 'จะถามครูวันเสาร์' : 'ถามครูวันเสาร์'}
             </button>
@@ -217,4 +240,9 @@ export default function Quiz({ topic, subject, nos: nosProp, questions, passages
       )}
     </div>
   );
+}
+
+/** A picture inside a choice button: no separate zoom button (the choice itself is the button). */
+function ChoiceImage({ id, alt }: { id: string; alt: string }) {
+  return <FigureImage id={id} alt={alt} inline />;
 }

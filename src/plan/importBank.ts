@@ -1,10 +1,13 @@
 import { unzipSync, type Unzipped } from 'fflate';
 import type { ExamDB } from '../db/db';
 import type { Figure, Passage, Question, Topic } from '../types';
-import { validateBank, type BankFile } from './bankSchema';
+import { choiceImage, validateBank, type BankFile } from './bankSchema';
 
 const MAX_BYTES = 300 * 1024 * 1024;
-const MIME: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', svg: 'image/svg+xml', gif: 'image/gif' };
+const MIME: Record<string, string> = {
+  png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', svg: 'image/svg+xml', gif: 'image/gif',
+  mp3: 'audio/mpeg', m4a: 'audio/mp4', aac: 'audio/aac', ogg: 'audio/ogg', oga: 'audio/ogg', wav: 'audio/wav', webm: 'audio/webm',
+};
 export const mimeOf = (path: string) => MIME[path.split('.').pop()!.toLowerCase()] ?? 'application/octet-stream';
 
 /** Default subject names, used to find a subject when it has no key yet. */
@@ -15,6 +18,13 @@ const SUBJECT_COLORS: Record<string, string> = {
   math: '#4f46e5', thai: '#0891b2', science: '#059669', english: '#d97706', social: '#db2777',
 };
 
+/**
+ * Colors for subjects beyond the built-in five, validated with them as one categorical
+ * palette (colour-blind separation + lightness). More subjects repeat these; every
+ * subject is always shown with its name, so colour is never the only cue.
+ */
+const EXTRA_COLORS = ['#7c3aed', '#65a30d', '#b45309'];
+
 export interface BankRead {
   bank: BankFile | null;
   errors: string[];
@@ -24,6 +34,7 @@ export interface BankRead {
     questions: number;
     withAnswer: number;
     figures: number;
+    audio: number;
     passages: number;
     needsReview: number;
     bySubject: Record<string, number>;
@@ -40,6 +51,22 @@ function unzip(bytes: Uint8Array): Unzipped {
       return true;
     },
   });
+}
+
+/** Every image/audio file a bank refers to. */
+export function assetPaths(bank: BankFile): string[] {
+  const out = new Set<string>();
+  const add = (p?: string | null) => p && out.add(p);
+  for (const q of bank.questions) {
+    add(q.image);
+    add(q.audio);
+    for (const c of q.choices ?? []) add(choiceImage(c));
+  }
+  for (const p of bank.passages ?? []) {
+    add(p.image);
+    add(p.audio);
+  }
+  return [...out];
 }
 
 /** Unzip and validate a bank without touching the database (for the preview). */
@@ -67,7 +94,7 @@ export function readBank(bytes: Uint8Array): BankRead {
   if (!bank) return { bank, errors, files: rel, summary: null };
   const bySubject: Record<string, number> = {};
   for (const q of bank.questions) bySubject[q.subject] = (bySubject[q.subject] ?? 0) + 1;
-  const images = new Set([...bank.questions.map((q) => q.image), ...(bank.passages ?? []).map((p) => p.image)].filter(Boolean));
+  const assets = assetPaths(bank);
   return {
     bank,
     errors,
@@ -76,7 +103,8 @@ export function readBank(bytes: Uint8Array): BankRead {
       exams: bank.exams.length,
       questions: bank.questions.length,
       withAnswer: bank.questions.filter((q) => q.answer !== null && q.answer !== '').length,
-      figures: images.size,
+      figures: assets.filter((p) => mimeOf(p).startsWith('image/')).length,
+      audio: assets.filter((p) => mimeOf(p).startsWith('audio/')).length,
       passages: bank.passages?.length ?? 0,
       needsReview: bank.questions.filter((q) => q.needsReview).length,
       bySubject,
@@ -91,7 +119,7 @@ export const keepImage: ImageProcessor = async (bytes, mime) => ({ data: copy(by
 
 /** Browser: shrink raster figures to ≤1000px WebP (keeps the original if that isn't smaller). */
 export const shrinkImage: ImageProcessor = async (bytes, mime) => {
-  if (mime === 'image/svg+xml' || typeof createImageBitmap !== 'function') return keepImage(bytes, mime);
+  if (!mime.startsWith('image/') || mime === 'image/svg+xml' || mime === 'image/gif' || typeof createImageBitmap !== 'function') return keepImage(bytes, mime);
   try {
     const bmp = await createImageBitmap(new Blob([copy(bytes)], { type: mime }));
     const scale = Math.min(1, 1000 / bmp.width);
@@ -110,6 +138,9 @@ export const shrinkImage: ImageProcessor = async (bytes, mime) => {
   return keepImage(bytes, mime);
 };
 
+const sourceLine = (book?: string, page?: number | string) =>
+  book || page ? [book, page !== undefined && page !== '' ? `หน้า ${page}` : ''].filter(Boolean).join(' · ') : undefined;
+
 /** "ข้อสอบวิชาคณิตศาสตร์ บทที่ 1 …" → "บทที่ 1 …" for topic names. */
 export const shortExamTitle = (title: string) => title.replace(/^ข้อสอบ(?:วิชา)?\S*\s+/, '').trim() || title;
 
@@ -119,14 +150,18 @@ export const shortExamTitle = (title: string) => title.replace(/^ข้อสอ
  */
 export async function applyBank(db: ExamDB, read: BankRead, processImage: ImageProcessor = keepImage, onProgress?: (done: number, total: number) => void) {
   const bank = read.bank!;
-  const paths = [...new Set([...bank.questions.map((q) => q.image), ...(bank.passages ?? []).map((p) => p.image)].filter(Boolean) as string[])];
+  const paths = assetPaths(bank);
+  const defaultFormat = bank.textFormat ?? 'plain';
+  const examById = new Map(bank.exams.map((e) => [e.id, e]));
   const figures: Figure[] = [];
   for (const [i, path] of paths.entries()) {
     const out = await processImage(read.files[path], mimeOf(path));
     figures.push({ id: path, mime: out.mime, data: out.data });
     onProgress?.(i + 1, paths.length);
   }
-  const passages: Passage[] = (bank.passages ?? []).map((p) => ({ id: p.id, text: p.text, image: p.image || undefined }));
+  const passages: Passage[] = (bank.passages ?? []).map((p) => ({
+    id: p.id, text: p.text, image: p.image || undefined, audio: p.audio || undefined, format: p.format ?? defaultFormat,
+  }));
   const questions: Question[] = bank.questions.map((q) => ({
     key: `${q.exam}:${q.no}`,
     setKey: q.exam,
@@ -141,6 +176,11 @@ export async function applyBank(db: ExamDB, read: BankRead, processImage: ImageP
     image: q.image || undefined,
     needsReview: q.needsReview || undefined,
     reviewNote: q.reviewNote || undefined,
+    format: q.format ?? defaultFormat,
+    points: q.points,
+    tags: q.tags?.length ? q.tags : undefined,
+    audio: q.audio || undefined,
+    source: sourceLine(examById.get(q.exam)?.source?.book, q.page),
   }));
 
   await db.transaction('rw', [db.questions, db.passages, db.figures, db.topics, db.subjects], async () => {
@@ -151,14 +191,16 @@ export async function applyBank(db: ExamDB, read: BankRead, processImage: ImageP
 
     const topics = await db.topics.toArray();
     const subjects = await db.subjects.toArray();
+    const named = new Map((bank.subjects ?? []).map((x) => [x.id, x]));
     const subjectFor = async (key: string) => {
-      let s = subjects.find((x) => x.key === key) ?? subjects.find((x) => x.name === SUBJECT_NAMES[key]);
+      const label = named.get(key)?.name ?? SUBJECT_NAMES[key];
+      let s = subjects.find((x) => x.key === key) ?? subjects.find((x) => x.name === label);
       if (s && !s.key) {
         s.key = key;
         await db.subjects.update(s.id!, { key });
       }
       if (!s) {
-        s = { key, name: SUBJECT_NAMES[key] ?? key, color: SUBJECT_COLORS[key] ?? '#475569', order: subjects.length };
+        s = { key, name: label ?? key, color: named.get(key)?.color ?? SUBJECT_COLORS[key] ?? EXTRA_COLORS[subjects.length % EXTRA_COLORS.length], order: subjects.length };
         s.id = await db.subjects.add(s);
         subjects.push(s);
       }

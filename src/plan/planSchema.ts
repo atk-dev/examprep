@@ -2,7 +2,14 @@ import type { ISODate } from '../types';
 
 export type SubjectKey = string;
 export type TaskType =
-  | 'practice' | 'timed' | 'reviewWrong' | 'subjectReview' | 'saturday' | 'mock' | 'catchup' | 'kickoff' | 'exam';
+  | 'practice' | 'timed' | 'reviewWrong' | 'subjectReview' | 'saturday' | 'mock' | 'catchup' | 'kickoff' | 'exam' | 'custom';
+
+/** 1.1: a task can cover several sets. Entries with from/to count toward completion; entries without are references. */
+export interface TaskSetRef {
+  set: string;
+  from?: number;
+  to?: number;
+}
 
 export interface PlanSet {
   id: string;
@@ -24,11 +31,12 @@ export interface PlanTask {
   title: string;
   note?: string;
   mock?: number;
+  sets?: TaskSetRef[];
 }
 
 export interface PlanFile {
   format: 'examprep-plan';
-  version: 1;
+  version: 1 | 1.1;
   title: string;
   description?: string;
   profile?: { school?: string; studentName?: string; teacherName?: string; targetScore?: number | null };
@@ -44,10 +52,11 @@ export interface PlanFile {
   restWeekdays: number[];
   sets: PlanSet[];
   tasks: PlanTask[];
-  mocks: { n: number; date: ISODate; note?: string }[];
+  /** 1.1: `sets` = question sets (one per subject) the app can run for this mock. */
+  mocks: { n: number; date: ISODate; note?: string; sets?: string[] }[];
 }
 
-export const TASK_TYPES: TaskType[] = ['practice', 'timed', 'reviewWrong', 'subjectReview', 'saturday', 'mock', 'catchup', 'kickoff', 'exam'];
+export const TASK_TYPES: TaskType[] = ['practice', 'timed', 'reviewWrong', 'subjectReview', 'saturday', 'mock', 'catchup', 'kickoff', 'exam', 'custom'];
 
 const isDate = (v: unknown): v is string => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -58,7 +67,7 @@ export function validatePlan(raw: unknown): { plan: PlanFile | null; errors: str
   const err = (path: string, msg: string) => errors.length < 50 && errors.push(`${path}: ${msg}`);
   if (!isObj(raw)) return { plan: null, errors: ['ไฟล์ไม่ใช่ JSON object'] };
   if (raw.format !== 'examprep-plan') err('format', 'ต้องเป็น "examprep-plan"');
-  if (raw.version !== 1) err('version', 'รองรับเฉพาะเวอร์ชัน 1');
+  if (raw.version !== 1 && raw.version !== 1.1) err('version', 'รองรับเวอร์ชัน 1 และ 1.1');
   if (typeof raw.title !== 'string' || !raw.title) err('title', 'ต้องมีชื่อแผน');
 
   const exam = raw.exam;
@@ -116,22 +125,28 @@ export function validatePlan(raw: unknown): { plan: PlanFile | null; errors: str
     if (!TASK_TYPES.includes(t.type as TaskType)) err(`${p}.type`, `ไม่รู้จักประเภท "${t.type}"`);
     if (t.subject !== undefined && !subjectIds.has(t.subject as string)) err(`${p}.subject`, `ไม่พบวิชา "${t.subject}"`);
     if (typeof t.title !== 'string' || !t.title) err(`${p}.title`, 'ต้องมีชื่องาน');
-    if (t.set !== undefined) {
-      const count = setCount.get(t.set as string);
-      if (count === undefined) err(`${p}.set`, `ไม่พบชุด "${t.set}"`);
-      else if (t.from !== undefined || t.to !== undefined) {
-        const from = t.from as number;
-        const to = t.to as number;
-        if (!Number.isInteger(from) || !Number.isInteger(to) || from < 1 || to < from || to > count) {
-          err(`${p}.from/to`, `ช่วงข้อ ${t.from}–${t.to} ไม่อยู่ใน 1–${count}`);
-        }
+    const checkRef = (at: string, set: unknown, from: unknown, to: unknown) => {
+      const count = setCount.get(set as string);
+      if (count === undefined) return err(`${at}.set`, `ไม่พบชุด "${set}"`);
+      if (from === undefined && to === undefined) return;
+      if (!Number.isInteger(from) || !Number.isInteger(to) || (from as number) < 1 || (to as number) < (from as number) || (to as number) > count) {
+        err(`${at}.from/to`, `ช่วงข้อ ${from}–${to} ไม่อยู่ใน 1–${count}`);
       }
+    };
+    if (t.set !== undefined) checkRef(p, t.set, t.from, t.to);
+    if (t.sets !== undefined) {
+      if (!Array.isArray(t.sets)) err(`${p}.sets`, 'ต้องเป็นรายการ');
+      else t.sets.forEach((r, j) => (isObj(r) ? checkRef(`${p}.sets[${j}]`, r.set, r.from, r.to) : err(`${p}.sets[${j}]`, 'ต้องมี set')));
     }
   });
 
   const mocks = Array.isArray(raw.mocks) ? raw.mocks : [];
   mocks.forEach((m, i) => {
-    if (!isObj(m) || !Number.isInteger(m.n) || !isDate(m.date)) err(`mocks[${i}]`, 'ต้องมี n และ date');
+    if (!isObj(m) || !Number.isInteger(m.n) || !isDate(m.date)) return err(`mocks[${i}]`, 'ต้องมี n และ date');
+    if (m.sets !== undefined) {
+      if (!Array.isArray(m.sets)) err(`mocks[${i}].sets`, 'ต้องเป็นรายการ');
+      else m.sets.forEach((x, j) => !setCount.has(x as string) && err(`mocks[${i}].sets[${j}]`, `ไม่พบชุด "${x}"`));
+    }
   });
 
   return { plan: errors.length ? null : (raw as unknown as PlanFile), errors };

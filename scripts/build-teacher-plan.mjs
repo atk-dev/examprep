@@ -69,12 +69,14 @@ const pretest = {
 };
 
 const thaiReview = 'หลักภาษาไทย · ภาษาพาที · วรรณคดีลำนำ';
+const thaiSets = ['prep-thai-01', 'prep-thai-02'];
+// [date, subject, title, note, chapter sets it reviews]
 const subjectReviewDays = [
-  ['2026-12-08', 'thai', 'ทวนบทที่จบแล้ว', thaiReview], ['2026-12-15', 'thai', 'ทวนบทที่จบแล้ว', thaiReview],
-  ['2026-12-22', 'thai', 'ทวนบทที่จบแล้ว', thaiReview], ['2026-12-29', 'thai', 'ทวนบทที่จบแล้ว', thaiReview],
-  ['2026-12-23', 'social', 'ทวนบท 1–2', 'ศาสนา · การปกครองและวัฒนธรรม'],
-  ['2026-12-30', 'social', 'ทวนบท 3–4', 'เศรษฐศาสตร์ · ประวัติศาสตร์'],
-  ['2027-01-06', 'social', 'ทวนบท 5–6', 'ภูมิศาสตร์ · อาเซียนศึกษา'],
+  ['2026-12-08', 'thai', 'ทวนบทที่จบแล้ว', thaiReview, thaiSets], ['2026-12-15', 'thai', 'ทวนบทที่จบแล้ว', thaiReview, thaiSets],
+  ['2026-12-22', 'thai', 'ทวนบทที่จบแล้ว', thaiReview, thaiSets], ['2026-12-29', 'thai', 'ทวนบทที่จบแล้ว', thaiReview, thaiSets],
+  ['2026-12-23', 'social', 'ทวนบท 1–2', 'ศาสนา · การปกครองและวัฒนธรรม', ['prep-soc-01', 'prep-soc-02']],
+  ['2026-12-30', 'social', 'ทวนบท 3–4', 'เศรษฐศาสตร์ · ประวัติศาสตร์', ['prep-soc-03', 'prep-soc-04']],
+  ['2027-01-06', 'social', 'ทวนบท 5–6', 'ภูมิศาสตร์ · อาเซียนศึกษา', ['prep-soc-05', 'prep-soc-06']],
 ];
 
 const mocks = [
@@ -129,7 +131,8 @@ for (const [subject, p] of Object.entries(pretest)) {
       title: `Pretest ชุดที่ ${i + 1} · ไล่ข้อที่ผิด${extra ? ` แล้วทำข้อ ${p.timedTo + 1}–${p.size}` : ''}` });
   });
 }
-for (const [date, subject, title, note] of subjectReviewDays) tasks.push({ date, type: 'subjectReview', subject, title, note });
+// `sets` without ranges are references (shown on the card); they don't auto-complete the task.
+for (const [date, subject, title, note, refs] of subjectReviewDays) tasks.push({ date, type: 'subjectReview', subject, title, note, sets: refs.map((set) => ({ set })) });
 tasks.push({ date: '2027-01-22', type: 'catchup', title: 'วันเก็บตก', note: 'ทำโจทย์ที่ค้าง หรือพัก' });
 for (let d = '2027-03-02'; d <= '2027-03-26'; d = addDays(d, 1)) {
   const subject = reviewByWeekday[weekday(d)];
@@ -148,7 +151,7 @@ tasks.forEach((t) => { t.id = `${t.date}-${t.type}${t.set ? `-${t.set}` : t.subj
 
 const plan = {
   format: 'examprep-plan',
-  version: 1,
+  version: 1.1,
   title: 'ปฏิทินเตรียมสอบเข้า ม.1',
   description: 'วันละวิชา วันละ 30 นาที · เสาร์ทวนสะสมและถามข้อสงสัย 1 ชั่วโมง · อาทิตย์พัก',
   profile: { school: 'โรงเรียนปากช่อง', studentName: '', teacherName: '', targetScore: null },

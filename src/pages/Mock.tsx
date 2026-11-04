@@ -57,7 +57,9 @@ function MockExams({ data }: { data: AppData }) {
     setMinutes(rec?.minutes ? String(rec.minutes) : '');
     setFocus(rec?.focus ?? '');
     setSaved(false);
-  }, [n, rec?.n]); // eslint-disable-line react-hooks/exhaustive-deps
+    // Reload the form only when switching rounds: saving creates/updates `rec`, and reacting to
+    // that would wipe the "saved" confirmation. Data is already loaded when this page renders.
+  }, [n]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const name = (k: string) => data.subjectByKey.get(k)?.name ?? k;
   // 1.1: question sets this mock can run in the app, one per subject.
